@@ -1,0 +1,150 @@
+#bgShapes_1 {
+  size: 10vh;
+  /* object-fit: cover; */
+  min-width: 60vw;
+  height: 100%;
+  height: -webkit-fill-available;
+  min-height: -moz-available;
+}
+#bgShapes_2 {
+  size: 10vh;
+  /* object-fit: cover; */
+  min-width: 120vw;
+  max-height: 150vh;
+}
+.bg_Container {
+  z-index: 2;
+  /* width: fit-content; */
+  /* height: fit-content; */
+  position: relative;
+  overflow: visible;
+  /* opacity: 30%; */
+  mix-blend-mode: color-burn;
+}
+
+#Layer_1 {
+  opacity: 100;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #bgShapes_2 {
+    animation: bgShapesSpin infinite 100s linear;
+  }
+  #Layer_1 {
+    animation: bgShapesSpin infinite 100s linear;
+  }
+}
+@keyframes bgShapesSpin {
+  0% {
+    transform: translate(10vw, -10vh) rotate(0deg);
+  }
+  50% {
+    transform: translate(-10vw, 10vh) rotate(180deg);
+  }
+  100% {
+    transform: translate(10vw, -10vh) rotate(360deg);
+  }
+}
+#gradientPalette {
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#mvl {
+  position: absolute;
+  bottom: 1vh;
+  /* max-width: 20vw; */
+  max-height: 3vh;
+  z-index: 2;
+  transform: translate(-50%, 0);
+}
+
+#logo {
+  position: absolute;
+  top: 1vh;
+  left: 1vh;
+  max-height: 5vh;
+  max-width: 5vh;
+  z-index: 2;
+  mix-blend-mode: color-burn;
+  /* transform: translate(-50%, 0); */
+}
+#myname {
+  position: absolute;
+  top: 2.5vh;
+  right: 3vh;
+  margin: 0;
+  /* max-height: 5vh;
+    max-width: 5vh; */
+  font-family: 'San Francisco Display';
+  font-weight: 600;
+  font-size: 2vh;
+  color: #dce706;
+  z-index: 2;
+  /* mix-blend-mode: color-burn; */
+  /* transform: translate(-50%, 0); */
+}
+
+@media (min-aspect-ratio: 6/10) {
+  #bg_Container_1 {
+    opacity: 60%;
+    bottom: -50vh;
+    left: min(-40vw, -40vh);
+  }
+
+  #bg_Container_2 {
+    opacity: 30%;
+    top: -90vmin;
+    right: min(-20vw, -30vh);
+  }
+
+  .bg_c_c {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+}
+
+.backgrounds {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+#mvl {
+  mix-blend-mode: color-dodge;
+}
+
+@media (max-aspect-ratio: 6/10) {
+  #bg_Container_1 {
+    opacity: 60%;
+    bottom: -50vh;
+    left: min(-50vw, -10vh);
+  }
+  #bg_Container_2 {
+    opacity: 50%;
+    top: -20vh;
+    right: min(-50vw, -10vh);
+  }
+
+  .bg_c_c {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+}
+
+.bg_c_c {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
