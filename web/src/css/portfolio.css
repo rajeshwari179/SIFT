@@ -32,7 +32,7 @@
   height: calc(0.9 * var(--webkit-h));
   min-height: calc(0.9 * var(--moz-h));
   /* width: 100%; */
-  position: absolute;
+  /* position: absolute; */
   /* transform: translateY(calc(-50% + (100vh - var(--webkit-h)) / 2)); */
 
   display: flex;
@@ -55,14 +55,17 @@
   border-bottom: 4px solid white;
 }
 #pf_con_con {
-  height: calc(87 * var(--vh, 1vh));
+  min-height: calc(87 * var(--vh, 1vh));
+  /* height: 100%; */
   width: 100vw;
-  position: fixed;
+  /* position: fixed; */
   overflow-y: auto;
-  top: 7vh;
+  /* top: 7vh; */
 
   display: flex;
   justify-content: center;
+  align-items: center;
+  margin-bottom: 10vh;
 }
 .pfChild {
   padding-top: 2.5vh;
@@ -70,8 +73,8 @@
 }
 @media (min-aspect-ratio: 6/10) {
   #pfs_container {
-    transform: translateY(-50%);
-    top: 50%;
+    /* transform: translateY(-50%); */
+    /* top: 50%; */
   }
   .portfolios {
     flex-direction: row;
@@ -82,6 +85,14 @@
   .pfChild {
     z-index: inherit;
     width: 40vw;
+  }
+
+  .short {
+    max-width: 40vw !important;
+  }
+
+  .medium {
+    max-width: 60vw !important;
   }
 }
 
@@ -95,6 +106,20 @@
   .pfChild {
     z-index: inherit;
     width: 80vw;
+  }
+  .row-left{
+    flex-direction: column !important;
+  }
+  .row-right{
+    flex-direction: column-reverse !important;
+  }
+  .img-left {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+  }
+  .img-right {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
   }
 }
 .pfChild button {
@@ -141,8 +166,8 @@
 .pfTitle {
   font-family: 'San Francisco Display';
   font-weight: 800;
-  font-size: 3vh;
-  margin-bottom: 1vh;
+  font-size: 4vh;
+  margin-bottom: 5vh;
   margin-top: 1.5vh;
 }
 .pfContent {
@@ -161,23 +186,122 @@
   flex-direction: row;
 }
 
+.column {
+  flex-direction: column;
+}
+
 .pad {
   padding-right: 1vh;
+}
+.no-wrap {
+  white-space: nowrap;
 }
 
 .rightArrow {
   max-width: 3vh;
   display: inline;
+  margin-left: 10px;
+  margin-right: 10px;
 }
 
+.width-control {
+  max-width: 70vw;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.center {
+  justify-content: center;
+}
 .concept .pfContent {
   white-space: nowrap;
   padding: 0;
   margin: 0;
 }
 
-.concept{
+.concept {
   border: 3px solid #dce70680;
   border-radius: 12px;
   padding: 1.2vh;
+}
+
+.main-box {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 7vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 99.5vw;
+
+  height: calc(87 * var(--vh, 1vh));
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+  margin-bottom: 2vh;
+}
+.row div {
+  margin-right: 2vh;
+}
+
+.row .img {
+  max-width: 50vw;
+  border-radius: 12px;
+  border: 3px solid #dce70680;
+  padding: 7px;
+}
+
+.row .img-left {
+  margin-right: 3.5vh;
+  margin-left: 0;
+}
+
+.row .img-right {
+  margin-right: 0;
+  margin-left: 3.5vh;
+}
+
+.img img {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+}
+
+.row .head {
+  font-family: 'San Francisco Display';
+  font-weight: 800;
+  font-size: 2.5vh;
+  margin-bottom: 1vh;
+  margin-top: 1.5vh;
+}
+
+.row p {
+  text-align: left;
+}
+
+p.left {
+  text-align: left;
+}
+
+.status {
+  margin-right: 1vw;
+}
+
+.main-img-box {
+  height: 100%;
+  width: 100%;
+}
+
+object.main {
+  max-height: 50vh;
+}
+
+.lime {
+  color: #dce706;
 }
