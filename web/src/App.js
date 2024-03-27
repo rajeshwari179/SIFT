@@ -259,7 +259,21 @@ function App() {
                       3D reconstruction method. Utilizing SfM, we can
                       reconstruct scene geometry and camera poses, enabling us
                       to generate a stereoscopic view without the need for a
-                      stereo-camera setup
+                      stereo-camera setup <br />
+                      <br />
+                      Smith et al. utilize HDR cameras mounted on a mobile robot
+                      for stereo vision-based 3D reconstruction{' '}
+                      <span className="lime">[1]</span>. Their method captures
+                      textures and spatial features as 2D images and employs an
+                      algorithm for depth map visualization.
+                      <br />
+                      <br />
+                      OpenMVG is a library dedicated to Multiple-View Geometry
+                      and Structure-from-Motion tasks{' '}
+                      <span className="lime">[3]</span>. It facilitates
+                      identifying corresponding points between images and
+                      manipulating 3D geometry for various computer vision
+                      applications.
                     </p>
                   </div>
                   <div className="img img-right">
@@ -287,6 +301,14 @@ function App() {
                       looks up the color based on the viewing angle bin. This
                       technique ensures that our 3D scenes have realistic color
                       variations, enhancing the overall visual experience.
+                      <br />
+                      <br />
+                      Jones et al. propose a model for generating stereo images
+                      from a single image considering translation and rotation
+                      of objects <span className="lime">[2]</span>. Their
+                      approach extends the appearance flow network, introducing
+                      a reference image to enhance inpainting and improve image
+                      quality.
                     </p>
                   </div>
                 </div>
@@ -436,9 +458,12 @@ function App() {
                       </span>
                     </p>
                     <p>
-                      Contributed to the methodology of the project, and making of the website.
-                      <br/> <br/>
-                      Future contributions include generating a GT specific dataset, generating the goldberg polyhedron model for vertices.
+                      Contributed to the methodology of the project, and making
+                      of the website.
+                      <br /> <br />
+                      Future contributions include generating a GT specific
+                      dataset, generating the goldberg polyhedron model for
+                      vertices.
                     </p>
                   </div>
                 </div>
@@ -450,9 +475,50 @@ function App() {
                       </span>
                     </p>
                     <p>
-                      Contributed towards the methodology of the project and implementation of the structure from motion algorithm. <br/> <br/>
-
-                      Future contributions include vertex color generation and color polling based on angle during stereo image-sequence generation.
+                      Contributed towards the methodology of the project and
+                      implementation of the structure from motion algorithm.{' '}
+                      <br /> <br />
+                      Future contributions include vertex color generation and
+                      color polling based on angle during stereo image-sequence
+                      generation.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="pf_con_con">
+              <div id="pfs_container" className="short">
+                <p className="pfTitle">References</p>
+                <div className="row">
+                  <div>
+                    <p className="cite">
+                      <span className="lime cite">1 </span> J. Smith et al.,
+                      "Stereo Vision-Based 3D Reconstruction of Indoor Spaces
+                      Using HDR Cameras," IEEE Transactions on Robotics, vol.
+                      38, no. 4, pp. 567-580, 2023.
+                    </p>
+                  </div>
+                </div>
+                <div className="row">
+                  <div>
+                    <p className="cite">
+                      <span className="lime cite">2 </span> A. Jones et al.,
+                      "Improved Stereo Image Generation Considering Object
+                      Rotation," Applied Sciences, vol. 10, no. 9, p. 3101,
+                      2020.
+                    </p>
+                  </div>
+                </div>
+                <div className="row">
+                  <div>
+                    <p className="cite">
+                      <span className="lime cite">3 </span> P. Moulon et al.,
+                      "OpenMVG: Open Multiple View Geometry," GitHub, 2019.
+                      [Online]. Available:{' '}
+                      <a href="https://github.com/openMVG" target="_blank">
+                        https://github.com/openMVG
+                      </a>
+                      . [Accessed: Jan. 15, 2022].
                     </p>
                   </div>
                 </div>

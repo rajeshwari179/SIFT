@@ -308,3 +308,16 @@ object.main {
 .lime {
   color: #dce706;
 }
+
+.cite{
+  font-size: 2vh;
+}
+
+.lime.cite{
+  font-weight: 700;
+}
+
+.cite a, .cite a:visited {
+  color: #dce706;
+  /* set visited color to the same */
+}
