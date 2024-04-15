@@ -1,20 +1,25 @@
 import numpy as np
 import cv2
-# import pycuda.driver as cuda
-# import pycuda.autoinit
-# from pycuda.compiler import SourceModule
+import pycuda.driver as cuda
+import pycuda.autoinit
+from pycuda.compiler import SourceModule
 
 # # CUDA kernel for Gaussian blur
 gaussian_blur_kernel = """
-__global__ void gaussian_blur(float *input, float *output, int width, int height) {
+__global__ void gaussian_blur(float *input, float *output, float *kernel, int width, int height, int kernel_size) {
     // Calculate pixel index
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int idy = blockIdx.y * blockDim.y + threadIdx.y;
     
-    __shared__ float gaussian_kernel[3][3];
+    // allocate shared memory, of size kernel_size x kernel_size
+    __shared__ float shared_kernel[kernel_size][kernel_size];
 
     if (idx < width && idy < height) {
-        // Apply Gaussian blur (simplified for illustration)
+        // Apply Gaussian blur
+        
+        // Copy kernel to shared memory
+        if (threadIdx.x < kernel_size && threadIdx.y < kernel_size) {
+            
         
         
         output[idx + idy * width] = input[idx + idy * width];
@@ -34,37 +39,44 @@ def get_gaussian_kernel(ksize, sigma):
         
     return kernel
 
-# # Compile CUDA kernel
-# mod = SourceModule(gaussian_blur_kernel)
+# Compile CUDA kernel
+mod = SourceModule(gaussian_blur_kernel)
 
-# # Get kernel function
-# gaussian_blur_func = mod.get_function("gaussian_blur")
+# Get kernel function
+gaussian_blur_func = mod.get_function("gaussian_blur")
 
-# def gaussian_blur_cuda(input_array):
-#     # Get image dimensions
-#     height, width = input_array.shape
+def gaussian_blur_cuda(image, kernel):
+    # Get image dimensions
+    height, width = image.shape
+    kernel_size = kernel.shape[0]
 
-#     # Allocate memory on GPU
-#     input_gpu = cuda.mem_alloc(input_array.nbytes)
-#     output_gpu = cuda.mem_alloc(input_array.nbytes)
+    # Allocate memory on GPU for input image
+    input_gpu = cuda.mem_alloc(image.nbytes)
 
-#     # Copy input data to GPU memory
-#     cuda.memcpy_htod(input_gpu, input_array)
+    # Allocate memory on GPU for output image, size = input - kernel + 1
+    output_gpu = cuda.mem_alloc((height - 2) * (width - 2) * image.itemsize)
+    
+    # Allocate memory on GPU for kernel
+    kernel_gpu = cuda.mem_alloc(kernel.nbytes)
 
-#     # Define block and grid dimensions
-#     block = (16, 16, 1)
-#     grid = ((width + block[0] - 1) // block[0], (height + block[1] - 1) // block[1], 1)
+    # Copy input data to GPU memory
+    cuda.memcpy_htod(input_gpu, image)
+    cuda.memcpy_htod(kernel_gpu, kernel)
 
-#     # Call CUDA kernel
-#     gaussian_blur_func(input_gpu, output_gpu, np.int32(width), np.int32(height), block=block, grid=grid)
+    # Define block and grid dimensions
+    block = (16, 16, 1)
+    grid = ((width + block[0] - 1) // block[0], (height + block[1] - 1) // block[1], 1)
 
-#     # Allocate memory on CPU for output
-#     output_array = np.empty_like(input_array)
+    # Call CUDA kernel
+    gaussian_blur_func(input_gpu, output_gpu, kernel_gpu, np.int32(width), np.int32(height), np.int32(kernel_size), block=block, grid=grid)
 
-#     # Copy output data from GPU to CPU
-#     cuda.memcpy_dtoh(output_array, output_gpu)
+    # Allocate memory on CPU for output
+    output_array = np.empty((height - 2, width - 2), dtype=image.dtype)
 
-#     return output_array
+    # Copy output data from GPU to CPU
+    cuda.memcpy_dtoh(output_array, output_gpu)
+
+    return output_array
 
 # Example usage
 # image = np.random.rand(512, 512).astype(np.float32)
