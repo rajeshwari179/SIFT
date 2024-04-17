@@ -179,13 +179,7 @@ function convolve(img, schema, imgHeight, print=1)
                 println("Convolution kernel: ", conv)
             end
             @cuda blocks = grids_row threads = blocks_row shmem = sharedMemSize row_kernel_strip(inp_GPU, conv_GPU, out_GPU, width, height, apron, print)
-            # CUDA.unsafe_free!(inp_GPU)
-            # inp_GPU = CuArray(zeros(Float32, 1, width - 2 * apron, height - 2 * apron * height ÷ imgHeight))
-            # kernel = @cuda launch = false maxregs = 32 col_kernel(out_GPU, conv_GPU, inp_GPU, width, height, imgHeight, apron)
-            # println(launch_configuration(kernel.fun))
-            # kernel(out_GPU, conv_GPU, inp_GPU, width, height, imgHeight, apron, blocks=grids_col, threads=blocks_col, shmem=sharedMemSize)
             @cuda blocks = grids_col threads = blocks_col shmem = sharedMemSize maxregs = 32 col_kernel(out_GPU, conv_GPU, inp_GPU, width, height, imgHeight, apron)
-            # @cuda blocks = grids_col threads = blocks_col shmem = sharedMemSize col_kernel(out_GPU, conv_GPU, inp_GPU, width, height, imgHeight, apron)
         end
         if print == 1
             println("Done")
