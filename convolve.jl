@@ -2,7 +2,7 @@ using OpenCV
 using CUDA
 
 function row_kernel_strips(inp, conv, out, width, height, apron, print)
-    blockNum::UInt16 = (blockIdx().x - 1) + (blockIdx().y - 1) * gridDim().x # column major block numbering, zero-based
+    blockNum::UInt32 = (blockIdx().x - 1) + (blockIdx().y - 1) * gridDim().x # column major block numbering, zero-based
     threadNum::UInt16 = (threadIdx().x - 1) + (threadIdx().y - 1) * blockDim().x # column major thread numbering in a block, zero-based
 
     # not sure why unsigned uint16 doesn't work
@@ -11,7 +11,7 @@ function row_kernel_strips(inp, conv, out, width, height, apron, print)
     # "this" refers to the current pixel in the input image
     # "that" refers to the current pixel in the output image
     thisX::Int16 = 0 # one-based
-    thisY::Int16 = 0 # one-based
+    thisY::Int32 = 0 # one-based
     thisPX::Int32 = 0 # zero-based
 
     # Let's do the row first
@@ -47,7 +47,7 @@ function row_kernel_strips(inp, conv, out, width, height, apron, print)
 end
 
 function row_kernel_strip(inp, conv, out, width, height, apron, print)
-    blockNum::UInt16 = (blockIdx().x - 1) + (blockIdx().y - 1) * gridDim().x # column major block numbering, zero-based
+    blockNum::UInt32 = (blockIdx().x - 1) + (blockIdx().y - 1) * gridDim().x # column major block numbering, zero-based
     threadNum::UInt16 = (threadIdx().x - 1) + (threadIdx().y - 1) * blockDim().x # column major thread numbering in a block, zero-based
     # not sure why unsigned uint16 doesn't work
     threads::Int16 = blockDim().x * blockDim().y # total number of threads in a block
@@ -55,7 +55,7 @@ function row_kernel_strip(inp, conv, out, width, height, apron, print)
     # "this" refers to the current pixel in the input image
     # "that" refers to the current pixel in the output image
     thisX::Int16 = 0 # one-based
-    thisY::Int16 = 0 # one-based
+    thisY::Int32 = 0 # one-based
     thisPX::Int32 = 0 # zero-based
 
     # Let's do the row first
@@ -84,10 +84,10 @@ function row_kernel_strip(inp, conv, out, width, height, apron, print)
 end
 
 function col_kernel(inp, conv, out, width, fullHeight, height, apron)
-    blockNum = (blockIdx().x - 1) * gridDim().y + (blockIdx().y - 1) # row first block numbering, zero-based
-    threadNum = (threadIdx().x - 1) + (threadIdx().y - 1) * blockDim().x # row first thread numbering in a block, zero-based
-    threads = blockDim().x * blockDim().y # total number of threads in a block
-    threadsX = blockDim().x
+    blockNum::UInt32 = (blockIdx().x - 1) * gridDim().y + (blockIdx().y - 1) # row first block numbering, zero-based
+    threadNum::UInt16 = (threadIdx().x - 1) + (threadIdx().y - 1) * blockDim().x # row first thread numbering in a block, zero-based
+    threads::Int16 = blockDim().x * blockDim().y # total number of threads in a block
+    threadsX::Int8 = blockDim().x
 
     # "this" refers to the current pixel in the input image
     # "that" refers to the current pixel in the output image
@@ -95,11 +95,11 @@ function col_kernel(inp, conv, out, width, fullHeight, height, apron)
         data = CuDynamicSharedArray(Float32, (threadsX, threads ÷ threadsX))
 
         blocksInARow::Int16 = cld(width - 2 * apron, threadsX) # this is the number of blocks in a row of the image (width)
-        blocksInAColumn::Int16 = cld(height - 2 * apron, threads ÷ threadsX - 2 * apron) # this is the number of blocks in a column of the image (height)
+        blocksInAColumn::Int32 = cld(height - 2 * apron, threads ÷ threadsX - 2 * apron) # this is the number of blocks in a column of the image (height)
         blocksInAnImage::Int32 = blocksInARow * blocksInAColumn
 
         thisImage::Int8 = blockNum ÷ blocksInAnImage # zero-based
-        thisBlockNum::Int16 = blockNum % blocksInAnImage # zero-based
+        thisBlockNum::Int32 = blockNum % blocksInAnImage # zero-based
 
         thisX::Int16 = (thisBlockNum ÷ blocksInAColumn) * threadsX + threadNum % threadsX + 1 # one-based
         thisY::Int32 = thisImage * height + (thisBlockNum % blocksInAColumn) * (threads / threadsX - 2 * apron) + threadNum ÷ threadsX + 1 # one-based
