@@ -196,16 +196,16 @@ function convolve1(inp_GPU, schema, imgHeight, width, height, print=1)
         apron = ceil(Int, sigma * sqrt(-2 * log(epsilon)))
         conv = reshape(OpenCV.getGaussianKernel(2 * apron + 1, sigma), 2 * apron + 1)
 
-        if print == 1
-            println("Convolve with Gaussian1D")
-            println("Sigma: ", sigma)
-            println("Epsilon: ", epsilon)
-            println("Apron: ", apron)
-        end
+        # if print == 1
+        #     println("Convolve with Gaussian1D")
+        #     println("Sigma: ", sigma)
+        #     println("Epsilon: ", epsilon)
+        #     println("Apron: ", apron)
+        # end
 
-        if print == 1
-            println("Width: ", width, ", Height: ", height)
-        end
+        # if print == 1
+        #     println("Width: ", width, ", Height: ", height)
+        # end
 
         blocks_row = (32, 32)
         blocks_col = (32, 28)
@@ -214,35 +214,35 @@ function convolve1(inp_GPU, schema, imgHeight, width, height, print=1)
         end
         grids_row = cld((width - 2 * apron), blocks_row[1] * blocks_row[2] - 2 * apron) * height
         grids_col = (cld(width - 2 * apron, blocks_col[1]), cld((height - 2 * apron), blocks_col[2] - 2 * apron) * height ÷ imgHeight)
-        if print == 1
-            println("Blocks: ", blocks_row)
-            println("Blocks: ", blocks_col)
-            println("Grids, col: $grids_col, row: $grids_row")
-        end
+        # if print == 1
+        #     println("Blocks: ", blocks_row)
+        #     println("Blocks: ", blocks_col)
+        #     println("Grids, col: $grids_col, row: $grids_row")
+        # end
         conv_GPU = CuArray(conv)
         out1_GPU = CuArray(zeros(Float32, 1, width - 2 * apron, height))
         out2_GPU = CuArray(zeros(Float32, 1, width - 2 * apron, height - 2 * apron * height ÷ imgHeight))
         sharedMemSize = blocks_row[1] * blocks_row[2] * (sizeof(Float32)) # shared memory size bytes
         if blocks_row[1] * blocks_row[2] >= width
-            if print == 1
-                println("more than one row in a block")
-                println("Shared memory size: ", sharedMemSize / 1024, " KB")
-                println("Convolution kernel: ", conv)
-            end
+            # if print == 1
+            #     println("more than one row in a block")
+            #     println("Shared memory size: ", sharedMemSize / 1024, " KB")
+            #     println("Convolution kernel: ", conv)
+            # end
             @cuda blocks = grids_row threads = blocks_row shmem = sharedMemSize row_kernel_strips(inp_GPU, conv_GPU, out1_GPU, width, height, apron, print)
             @cuda blocks = grids_col threads = blocks_col shmem = sharedMemSize col_kernel(out1_GPU, conv_GPU, out2_GPU, width, height, imgHeight, apron)
         else
-            if print == 1
-                println("many blocks in a row")
-                println("Shared memory size: ", sharedMemSize / 1024, " KB")
-                println("Convolution kernel: ", conv)
-            end
+            # if print == 1
+            #     println("many blocks in a row")
+            #     println("Shared memory size: ", sharedMemSize / 1024, " KB")
+            #     println("Convolution kernel: ", conv)
+            # end
             @cuda blocks = grids_row threads = blocks_row shmem = sharedMemSize row_kernel_strip(inp_GPU, conv_GPU, out1_GPU, width, height, apron, print)
             @cuda blocks = grids_col threads = blocks_col shmem = sharedMemSize col_kernel(out1_GPU, conv_GPU, out2_GPU, width, height, imgHeight, apron)
         end
-        if print == 1
-            println("Done")
-        end
+        # if print == 1
+        #     println("Done")
+        # end
         return Array(out2_GPU), Array(out1_GPU)
         return 1, 2
     end
@@ -313,3 +313,132 @@ begin
     end
     println("NO L2 CACHE: Time taken per iteration: ", time_taken / (iterations * nimages), " seconds per image when $nimages images are processed at once")
 end
+
+
+
+
+
+function kernel_subtract_strip(img1, img2, out, width, height, apron)
+    blockNum::UInt32 = (blockIdx().x - 1) + (blockIdx().y - 1) * gridDim().x
+    threadNum::UInt16 = (threadIdx().x - 1) + (threadIdx().y - 1) * blockDim().x
+    threads::Int16 = blockDim().x * blockDim().y 
+    data1 = CuDynamicSharedArray(Float32, width)
+    data2 = CuDynamicSharedArray(Float32, width)
+    X1 = threadNum 
+    Y1 = blockNum
+    #Y1 = blockNum*width + threadNum
+    #if 0 <= Y1 < width * height
+    if 0 <= Y1 <  height && 0 <= X1 < width
+        data1[threadNum+1] = img1[Y1*width + X1 +1]
+        sync_threads()
+        data2[threadNum+1] = img2[(Y1+apron)*width + X1 +apron+1]
+        sync_threads()
+        out[threadNum+1] = data1[threadNum+1] - data2[threadNum+1]
+
+function kernel_subtract_strips(img1, img2, out, width, height, apron)
+    blockNum::UInt32 = (blockIdx().x - 1) + (blockIdx().y - 1) * gridDim().x
+    threadNum::UInt16 = (threadIdx().x - 1) + (threadIdx().y - 1) * blockDim().x
+    threads::Int16 = blockDim().x * blockDim().y 
+    data1 = CuDynamicSharedArray(Float32, width)
+    data2 = CuDynamicSharedArray(Float32, width)
+    X1 = cld(blockNum ÷  cld(width, threads)) + threadNum
+    Y1 = cld(blockNum ÷ cld(width, threads))
+    if 0 <= X1 < width && 0 <= Y1 < height
+        data1[(blockNum+apron)*width + threadNum+apron+1] = img1[(blockNum+apron)*width + threadNum+apron+1]
+        sync_threads()
+        data2[(blockNum+apron)*width + threadNum+apron+1] = img2[(blockNum+apron)*width + threadNum+apron+1]
+        sync_threads()
+        out[threadNum+1] = data1[threadNum+1] - data2[threadNum+1]
+
+
+    
+
+
+
+
+function DoG(inp_GPU, schema, imgHeight, width, heigh, s, k)
+  
+    s = 1.6
+    epsilon = 0.1725
+    
+    filters = []
+    
+    for n in 0:4
+        k = sqrt(2)^n
+        sigma = s * k
+        schema = Dict(:name => "gaussian1D", :sigma => sigma, :epsilon => epsilon)
+        
+        if schema[:name] == "gaussian1D"
+            sigma = convert(Float64, schema[:sigma])
+            epsilon = haskey(schema, :epsilon) ? schema[:epsilon] : 0.0001
+            apron = ceil(Int, sigma * sqrt(-2 * log(epsilon)))
+            conv = reshape(OpenCV.getGaussianKernel(2 * apron + 1, sigma), 2 * apron + 1)
+            
+            width, height = size(img)
+            
+            blocks_row = (32, 32)
+            blocks_col = (32, 32)
+            
+            while blocks_col[2] - 2 * apron < 0 && blocks_col[1] > 4
+                blocks_col = (blocks_col[1] ÷ 2, blocks_col[2] * 2)
+            end
+            
+            grids_row = cld((width - 2 * apron), blocks_row[1] * blocks_row[2] - 2 * apron) * height
+            grids_col = (cld(width - 2 * apron, blocks_col[1]), cld((height - 2 * apron), blocks_col[2] - 2 * apron) * height ÷ imgHeight)
+            
+            inp_GPU = CuArray(img)
+            conv_GPU = CuArray(conv)
+            out_GPU = CuArray(zeros(Float32, 1, width - 2 * apron, height))
+            sharedMemSize = blocks_row[1] * blocks_row[2] * (sizeof(Float32))
+            
+            if blocks_row[1] * blocks_row[2] >= width
+                @cuda blocks = grids_row threads = blocks_row shmem = sharedMemSize row_kernel_strips(inp_GPU, conv_GPU, out_GPU, width, height, apron)
+                CUDA.unsafe_free!(inp_GPU)
+                @cuda blocks = grids_col threads = blocks_col shmem = sharedMemSize col_kernel(out_GPU, conv_GPU, inp_GPU, width, height, imgHeight, apron)
+            else
+                @cuda blocks = grids_row threads = blocks_row shmem = sharedMemSize row_kernel_strip(inp_GPU, conv_GPU, out_GPU, width, height, apron)
+                @cuda blocks = grids_col threads = blocks_col shmem = sharedMemSize maxregs = 32 col_kernel(out_GPU, conv_GPU, inp_GPU, width, height, imgHeight, apron)
+            end
+            
+            push!(filters, out_GPU)
+        end
+    end
+    
+    filter1, filter2, filter3, filter4, filter5 = filters
+
+  # Initialize an array to store the difference images
+diff_images = []
+
+for i in 1:4
+    out_GPU = CuArray(zeros(Float32, 1, width , height))  # Reset out_GPU for each iteration
+
+    
+    if i == 1
+        width, height = size(filter2)
+        if blocks_row[1] * blocks_row[2] >= width
+        @cuda blocks = grids_row threads = blocks_row shmem = sharedMemSize kernel_subtract_strips(filter2, filter1, out_GPU, width, height, apron)
+        else
+        @cuda blocks = grids_row threads = blocks_row shmem = sharedMemSize kernel_subtract_strip(filter2, filter1, out_GPU, width, height, apron)
+
+    elseif i == 2
+        width, height = size(filter3)
+        if blocks_row[1] * blocks_row[2] >= width
+        @cuda blocks = grids_row threads = blocks_row shmem = sharedMemSize kernel_subtract_strips(filter3, filter2, out_GPU, width, height, apron)
+        else
+        @cuda blocks = grids_row threads = blocks_row shmem = sharedMemSize kernel_subtract_strip(filter3, filter2, out_GPU, width, height, apron)
+    elseif i == 3
+        width, height = size(filter4)
+        if blocks_row[1] * blocks_row[2] >= width
+        @cuda blocks = grids_row threads = blocks_row shmem = sharedMemSize kernel_subtract_strips(filter4, filter3, out_GPU, width, height, apron)
+        else
+        @cuda blocks = grids_row threads = blocks_row shmem = sharedMemSize kernel_subtract_strip(filter4, filter3, out_GPU, width, height, apron)
+    elseif i == 4
+        width, height = size(filter5)
+        if blocks_row[1] * blocks_row[2] >= width
+        @cuda blocks = grids_row threads = blocks_row shmem = sharedMemSize kernel_subtract_strips(filter5, filter4, out_GPU, width, height, apron)
+        else
+        @cuda blocks = grids_row threads = blocks_row shmem = sharedMemSize kernel_subtract_strip(filter5, filter4, out_GPU, width, height, apron)
+    
+    push!(diff_images, copy(out_GPU))  # Copy out_GPU and push it to diff_images
+end
+
