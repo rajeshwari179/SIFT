@@ -60,7 +60,7 @@ def do_surf(image):
 
 # Function to extract features and descriptors from an image
 def extract_features(image):
-    # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     # use cuda instead of cpu
     # gray = cv2.cuda_GpuMat()
     # gray.upload(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
@@ -71,11 +71,11 @@ def extract_features(image):
     # keypoints, descriptors = sift.compute(gray, keypoints)
     
     #no cuda
-    # sift = cv2.SIFT_create()
-    # keypoints = sift.detect(gray, None)
-    # keypoints, descriptors = sift.compute(gray, keypoints)
+    sift = cv2.SIFT_create()
+    keypoints = sift.detect(gray, None)
+    keypoints, descriptors = sift.compute(gray, keypoints)
     
-    keypoints = do_surf(image)
+    # keypoints = do_surf(image)
     
     # use surf instead of sift, no cuda
     # surf = cv2.xfeatures2d.SURF_create()
