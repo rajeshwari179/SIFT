@@ -1,315 +1,249 @@
-using OpenCV
-using CUDA
+using CUDA, Images, FileIO
+import OpenCV.getGaussianKernel
+using DelimitedFiles
 
-function row_kernel_strips(inp, conv, out, width, height, apron, print)
-    blockNum::UInt32 = (blockIdx().x - 1) + (blockIdx().y - 1) * gridDim().x # column major block numbering, zero-based
-    threadNum::UInt16 = (threadIdx().x - 1) + (threadIdx().y - 1) * blockDim().x # column major thread numbering in a block, zero-based
-
-    # not sure why unsigned uint16 doesn't work
-    threads::Int16 = blockDim().x * blockDim().y # total number of threads in a block
-
-    # "this" refers to the current pixel in the input image
-    # "that" refers to the current pixel in the output image
-    thisX::Int16 = 0 # one-based
-    thisY::Int32 = 0 # one-based
-    thisPX::Int32 = 0 # zero-based
-
-    # Let's do the row first
-    # if thread count is greater than one row
-    # we'll do (width) * (threads ÷ width) pixels in a block
-    data = CuDynamicSharedArray(Float32, (width, threads ÷ width))
-
-    if threadNum < width * (threads ÷ width)
-        thisPX = blockNum * width * (threads ÷ width) + threadNum # zero-based
-        if true
-            thisX = thisPX % width + 1 # one-based
-            thisY = (thisPX - thisX + 1) ÷ width + 1 # one-based
-            # coalesced memory access
-            if (0 <= thisPX < width * height)
-                X::Int16 = threadNum % width + 1
-                Y::Int16 = (threadNum - (X - 1)) ÷ width + 1
-                data[X, Y] = inp[thisPX+1]
-            end
-            sync_threads()
+function getApron(schema)
+    if typeof(schema) == Dict{Symbol,Any}
+        sigma = convert(Float64, schema[:sigma])
+        epsilon = haskey(schema, :epsilon) ? schema[:epsilon] : 0.0001
+        apron = ceil(Int, sigma * sqrt(-2 * log(epsilon)))
+        return apron
+    else
+        aprons = Int8[]
+        for i in eachindex(schema)
+            sigma = convert(Float64, schema[i][:sigma])
+            epsilon = haskey(schema[i], :epsilon) ? schema[i][:epsilon] : 0.0001
+            apron = ceil(Int, sigma * sqrt(-2 * log(epsilon)))
+            push!(aprons, apron)
         end
-        # thatX = thisX - apron # one-based
-        # thatY = thisY # one-based
-        if apron < threadNum % width + 1 <= width - apron && 0 <= thisPX < width * height
-            outData::Float32 = 0
-            for i in -apron:apron
-                outData += data[threadNum%width+1+i, (threadNum-(X-1))÷width+1] * conv[i+apron+1]
-            end
-            out[1, threadNum%width+1-apron, blockNum*(threads÷width)+(threadNum-(X-1))÷width+1] = outData
-        end
-
+        return aprons
     end
-    return
 end
 
-function row_kernel_strip(inp, conv, out, width, height, apron, print)
-    blockNum::UInt32 = (blockIdx().x - 1) + (blockIdx().y - 1) * gridDim().x # column major block numbering, zero-based
-    threadNum::UInt16 = (threadIdx().x - 1) + (threadIdx().y - 1) * blockDim().x # column major thread numbering in a block, zero-based
-    # not sure why unsigned uint16 doesn't work
-    threads::Int16 = blockDim().x * blockDim().y # total number of threads in a block
+function getSchemas(schemaBase, sigma, s, layers)
+    schemas = []
+    for i in 1:layers
+        newSchema = copy(schemaBase)
+        newSchema[:sigma] = Float64(round(sigma * s^(i - 1), digits=4))
+        push!(schemas, newSchema)
+    end
+    return schemas
+end
 
-    # "this" refers to the current pixel in the input image
-    # "that" refers to the current pixel in the output image
-    thisX::Int16 = 0 # one-based
-    thisY::Int32 = 0 # one-based
-    thisPX::Int32 = 0 # zero-based
+function col_kernel_strips(inp, conv, buffer, width::Int32, height::Int16, apron::Int8)
+    blockNum::UInt32 = blockIdx().x - 1 + (blockIdx().y - 1) * gridDim().x # block number, column major, 0-indexed
+    threadNum::UInt16 = threadIdx().x - 1
+    threads::Int16 = blockDim().x
 
-    # Let's do the row first
-    # we'll do threads pixels in a block
+    # there could be more blocks than needed
+    thisX::Int32 = blockNum ÷ cld((height - 2 * apron), (threads - 2 * apron)) + 1 # 1-indexed
+    thisY::Int16 = blockNum % cld((height - 2 * apron), (threads - 2 * apron)) * (threads - 2 * apron) + threadNum + 1 # 1-indexed
+    thisPX::Int32 = 0
+
     data = CuDynamicSharedArray(Float32, threads)
 
-    # total blocks in a row = width ÷ threads + 1
-    # "this" refers to the current pixel in the input image
-    thisY = blockNum ÷ (cld(width - 2 * apron, threads - 2 * apron)) + 1 # one-based
-    thisX = (blockNum % (cld(width - 2 * apron, threads - 2 * apron))) * (threads - 2 * apron) + threadNum + 1 # one-based
-
-    if 0 < thisX <= width && 0 < thisY <= height
-        thisPX = (thisY - 1) * width + (thisX - 1) # zero-based
-        data[threadNum+1] = inp[thisPX+1]
+    # fill the shared memory
+    if thisY <= height && thisX <= width
+        thisPX = thisY + (thisX - 1) * height
+        data[threadNum+1] = inp[thisPX]
     end
     sync_threads()
 
-    if thisX <= width - apron && 0 < thisY <= height && apron <= threadNum < threads - apron
-        outData = 0.0
+    # convolution
+    if apron < thisY <= height - apron && thisX <= width && apron <= threadNum < threads - apron
+        sum::Float32 = 0.0
         for i in -apron:apron
-            outData += data[threadNum+1+i] * conv[i+apron+1]
+            sum += data[threadNum+1+i] * conv[apron+1+i]
         end
-        out[1, thisX-apron, thisY] = outData
+        buffer[thisY, thisX] = sum
     end
     return
 end
 
-function col_kernel(inp, conv, out, width, fullHeight, height, apron)
-    blockNum::UInt32 = (blockIdx().x - 1) * gridDim().y + (blockIdx().y - 1) # row first block numbering, zero-based
-    threadNum::UInt16 = (threadIdx().x - 1) + (threadIdx().y - 1) * blockDim().x # row first thread numbering in a block, zero-based
-    threads::Int16 = blockDim().x * blockDim().y # total number of threads in a block
-    threadsX::Int8 = blockDim().x
+# buffH is the height of the buffer including the black apron at the bottom
+# inpH is the height of the image excluding the aprons, after the column kernel
+function row_kernel(inp, conv, out, inpH::Int16, buffH::Int16, width::Int32, imgWidth::Int16, apron::Int8)
+    blockNum::UInt32 = blockIdx().x - 1 + (blockIdx().y - 1) * gridDim().x # block number, column major, 0-indexed
+    threadNum::UInt16 = threadIdx().x - 1 + (threadIdx().y - 1) * blockDim().x
+    threads::Int16 = blockDim().x * blockDim().y
 
-    # "this" refers to the current pixel in the input image
-    # "that" refers to the current pixel in the output image
-    if threads <= fullHeight
-        data = CuDynamicSharedArray(Float32, (threadsX, threads ÷ threadsX))
+    if threads <= width
 
-        blocksInARow::Int16 = cld(width - 2 * apron, threadsX) # this is the number of blocks in a row of the image (width)
-        blocksInAColumn::Int32 = cld(height - 2 * apron, threads ÷ threadsX - 2 * apron) # this is the number of blocks in a column of the image (height)
-        blocksInAnImage::Int32 = blocksInARow * blocksInAColumn
+        blocksInACol::Int8 = cld(inpH, blockDim().x)
+        blocksInARow::Int16 = cld(imgWidth - 2 * apron, blockDim().y - 2 * apron)
+        blocksInAnImage::Int16 = blocksInACol * blocksInARow
+        # #             |  number of images to the left * imgWidth |   blockNum wrt this image ÷ blocksInAColumn   * thrds in x   | number of threads on the left|
+        # thisX::Int32 = fld(blockNum, blocksInAnImage) * imgWidth + fld(blockNum % blocksInAnImage, blocksInACol) * blockDim().y + threadIdx().y # 1-indexed
+        # thisY::Int16 = blockNum % blocksInACol * blockDim().x + threadIdx().x # 1-indexed
 
-        thisImage::Int8 = blockNum ÷ blocksInAnImage # zero-based
-        thisBlockNum::Int32 = blockNum % blocksInAnImage # zero-based
+        # thisImage::Int8 = blockNum ÷ blocksInAnImage # 0-indexed
+        # thisBlockNum::Int16 = blockNum % blocksInAnImage # 0-indexed
 
-        thisX::Int16 = (thisBlockNum ÷ blocksInAColumn) * threadsX + threadNum % threadsX + 1 # one-based
-        thisY::Int32 = thisImage * height + (thisBlockNum % blocksInAColumn) * (threads / threadsX - 2 * apron) + threadNum ÷ threadsX + 1 # one-based
+        thisX::Int32 = (blockNum ÷ blocksInAnImage) * imgWidth + ((blockNum % blocksInAnImage) % blocksInARow) * (blockDim().y - 2 * apron) + threadIdx().y # 1-indexed
+        thisY::Int16 = ((blockNum % blocksInAnImage) ÷ blocksInARow) * blockDim().x + threadIdx().x + apron # 1-indexed
 
-        thisPX::Int32 = (thisY - 1) * (width - 2 * apron) + (thisX - 1) # zero-based
+        data = CuDynamicSharedArray(Float32, (blockDim().x, blockDim().y))
 
-        if 0 <= thisPX < (width - 2 * apron) * fullHeight
-            data[threadNum+1] = inp[thisPX+1]
+        # fill the shared memory
+        thisPX::Int32 = thisY + (thisX - 1) * buffH
+        if thisX <= width && thisY <= inpH + apron
+            data[threadNum+1] = inp[thisPX]
         end
         sync_threads()
 
-        if 0 < thisX <= (width - 2 * apron) && apron < thisY <= fullHeight - apron && apron <= (threadNum ÷ threadsX) < threads / threadsX - apron
-            outData = 0.0
+        # if threadNum==0 && blockNum==0
+        #     @cuprintln("Size of inp: $(size(inp)), size of out: $(size(out)), size of data: $(size(data))")
+        # end
+
+
+        # convolution
+        thisIsAComputationThread::Bool = thisY <= inpH + apron && apron < thisX <= width - apron && apron < threadIdx().y <= blockDim().y - apron
+        # if thisY == 1073 && apron==6 && thisX > 3900
+        #     @cuprintln("isThisAComputationThread: $(thisIsAComputationThread), thisX: $thisX)")
+        # end
+        if (blockNum % blocksInAnImage) % blocksInARow == blocksInARow - 1
+            thisIsAComputationThread = thisIsAComputationThread && (thisX - (blockNum ÷ blocksInAnImage) * imgWidth <= imgWidth - 2 * apron)
+        end
+        if thisIsAComputationThread
+            sum::Float32 = 0.0
             for i in -apron:apron
-                outData += data[threadNum+i*threadsX+1] * conv[i+apron+1]
+                sum += data[threadNum+1+i*blockDim().x] * conv[apron+1+i]
             end
-            out[1, thisX, thisY-(thisImage)*2*apron-apron] = outData
+            # out[thisY, thisX-apron-fld(blockNum, blocksInAnImage)*2*apron] = sum
+            out[thisY, thisX] = sum
         end
     end
     return
+
 end
 
-function convolve(img, schema, imgHeight, print=1)
-    if schema[:name] == "gaussian1D"
-        sigma = convert(Float64, schema[:sigma])
-        epsilon = haskey(schema, :epsilon) ? schema[:epsilon] : 0.0001
-        apron = ceil(Int, sigma * sqrt(-2 * log(epsilon)))
-        conv = reshape(OpenCV.getGaussianKernel(2 * apron + 1, sigma), 2 * apron + 1)
-
-        if print == 1
-            println("Convolve with Gaussian1D")
-            println("Sigma: ", sigma)
-            println("Epsilon: ", epsilon)
-            println("Apron: ", apron)
-        end
-        width::Int32, height::Int32 = (0, 0)
-        if length(size(img)) == 2
-            width, height = size(img)
-        else
-            _, width, height = size(img)
-        end
-
-        if print == 1
-            println("Width: ", width, ", Height: ", height)
-        end
-
-        blocks_row = (32, 32)
-        blocks_col = (32, 32)
-        # blocks_col = (32, 28)
-        while blocks_col[2] - 2 * apron < 0 && blocks_col[1] > 4
-            blocks_col = (blocks_col[1] ÷ 2, blocks_col[2] * 2)
-        end
-        grids_row = cld((width - 2 * apron), blocks_row[1] * blocks_row[2] - 2 * apron) * height
-        grids_col = (cld(width - 2 * apron, blocks_col[1]), cld((height - 2 * apron), blocks_col[2] - 2 * apron) * height ÷ imgHeight)
-        if print == 1
-            println("Blocks: ", blocks_row)
-            println("Blocks: ", blocks_col)
-            println("Grids, col: $grids_col, row: $grids_row")
-        end
-        inp_GPU = CuArray(img)
-        conv_GPU = CuArray(conv)
-        out_GPU = CuArray(zeros(Float32, 1, width - 2 * apron, height))
-        sharedMemSize = blocks_row[1] * blocks_row[2] * (sizeof(Float32)) # shared memory size in bytes
-        if blocks_row[1] * blocks_row[2] >= width
-            if print == 1
-                println("more than one row in a block")
-                println("Shared memory size: ", sharedMemSize / 1024, " KB")
-                println("Convolution kernel: ", conv)
+function doLayersConvolvesAndDoGAndOctave(img_gpu, out_gpus, buffer, conv_gpus, aprons, height, width, imgWidth, layers, octaves)
+    time_taken = 0
+    for j in 1:octaves
+        for i in 1:layers
+            # assuming height <= 1024
+            threads_column = 1024 #32 * 32
+            threads_row = (16, 768 ÷ 16)
+            while threads_row[2] - 2 * aprons[i] <= 0 && threads_row[1] > 4
+                threads_row = (threads_row[1] ÷ 2, threads_row[2] * 2)
             end
-            @cuda blocks = grids_row threads = blocks_row shmem = sharedMemSize row_kernel_strips(inp_GPU, conv_GPU, out_GPU, width, height, apron, print)
-            CUDA.unsafe_free!(inp_GPU)
-            @cuda blocks = grids_col threads = blocks_col shmem = sharedMemSize col_kernel(out_GPU, conv_GPU, inp_GPU, width, height, imgHeight, apron)
-        else
-            if print == 1
-                println("many blocks in a row")
-                println("Shared memory size: ", sharedMemSize / 1024, " KB")
-                println("Convolution kernel: ", conv)
+            # println("threads_column: $threads_column, threads_row: $threads_row")
+            if cld(height, prod(threads_column)) > 1
+                blocks_column = makeThisNearlySquare((cld(height - 2 * aprons[i], threads_column - 2 * aprons[i]), width))
+                # println("org_blocks_column: $((cld(height-2*aprons[i], threads_column-2*aprons[i]), width))")
+                # println("blocks_column: $blocks_column")
+                blocks_row = makeThisNearlySquare((cld(height - 2 * aprons[i], threads_row[1]) * cld(width - 2 * aprons[i], threads_row[2] - 2 * aprons[i]) + cld(height - 2 * aprons[i], threads_row[1]) / 2 * cld(imgWidth - 2 * aprons[i], threads_row[2] - 2 * aprons[i]), 1))
+                # println("blocks_row: $blocks_row")  
+                shmem_column = threads_column * sizeof(Float32)
+                shmem_row = threads_row[1] * threads_row[2] * sizeof(Float32)
+
+
+                time_taken += CUDA.@elapsed buffer .= 0
+                time_taken += CUDA.@elapsed @cuda threads = threads_column blocks = blocks_column shmem = shmem_column col_kernel_strips(img_gpu, conv_gpus[i], buffer, Int32(width), Int16(height), Int8(aprons[i]))
+                # kernel = @cuda name = "col" launch = false col_kernel_strips(img_gpu, conv_gpus[1], buffer, Int32(width), Int16(height), Int8(aprons[i]))
+                # println(launch_configuration(kernel.fun))
+                # kernel = @cuda name = "row" launch = false row_kernel(buffer, conv_gpus[i], out_gpus[j][i], Int16(height - 2 * aprons[i]), Int16(height), Int32(width), Int16(imgWidth), Int8(aprons[i]))
+                # println(launch_configuration(kernel.fun))
+                # println("h-2ap:$(Int16(height - 2 * aprons[i])), h: $(Int16(height)), w: $(Int32(width)), imW: $(Int16(imgWidth)), apron: $(Int8(aprons[i]))")
+                time_taken += CUDA.@elapsed @cuda threads = threads_row blocks = blocks_row shmem = shmem_row row_kernel(buffer, conv_gpus[i], out_gpus[j][i], Int16(height - 2 * aprons[i]), Int16(height), Int32(width), Int16(imgWidth), Int8(aprons[i]))
+                # save("assets/gaussian_new_$([i])_1_int.png", colorview(Gray, collect(buffer)))
+                # save("assets/gaussian_new_$([i])_2_int.png", colorview(Gray, collect(out_gpus[j][i])))
             end
-            @cuda blocks = grids_row threads = blocks_row shmem = sharedMemSize row_kernel_strip(inp_GPU, conv_GPU, out_GPU, width, height, apron, print)
-            @cuda blocks = grids_col threads = blocks_col shmem = sharedMemSize maxregs = 32 col_kernel(out_GPU, conv_GPU, inp_GPU, width, height, imgHeight, apron)
         end
-        if print == 1
-            println("Done")
+        for i in 1:(layers-1)
+            time_taken += CUDA.@elapsed out_gpus[j][i] = out_gpus[j][i+1] .- out_gpus[j][i]
+            time_taken += CUDA.@elapsed out_gpus[j][i] = out_gpus[j][i] .* (out_gpus[j][i] .> 0.0)
         end
-        return Array(inp_GPU), Array(out_GPU)
-        return 1, 2
+    end
+    return time_taken
+end
+
+function makeThisNearlySquare(blocks)
+    product = blocks[1] * blocks[2]
+    X = floor(Int32, sqrt(product))
+    Y = X
+    while product % X != 0 && X / Y > 0.75
+        X -= 1
+    end
+
+    if product % X == 0
+        return Int32.((X, product ÷ X))
+    else
+        return Int32.((Y, cld(product, Y)))
     end
 end
 
-function convolve1(inp_GPU, schema, imgHeight, width, height, print=1)
-    if schema[:name] == "gaussian1D"
-        sigma = convert(Float64, schema[:sigma])
-        epsilon = haskey(schema, :epsilon) ? schema[:epsilon] : 0.0001
-        apron = ceil(Int, sigma * sqrt(-2 * log(epsilon)))
-        conv = reshape(OpenCV.getGaussianKernel(2 * apron + 1, sigma), 2 * apron + 1)
-
-        if print == 1
-            println("Convolve with Gaussian1D")
-            println("Sigma: ", sigma)
-            println("Epsilon: ", epsilon)
-            println("Apron: ", apron)
-        end
-
-        if print == 1
-            println("Width: ", width, ", Height: ", height)
-        end
-
-        blocks_row = (32, 32)
-        blocks_col = (32, 28)
-        while blocks_col[2] - 2 * apron < 0 && blocks_col[1] > 4
-            blocks_col = (blocks_col[1] ÷ 2, blocks_col[2] * 2)
-        end
-        grids_row = cld((width - 2 * apron), blocks_row[1] * blocks_row[2] - 2 * apron) * height
-        grids_col = (cld(width - 2 * apron, blocks_col[1]), cld((height - 2 * apron), blocks_col[2] - 2 * apron) * height ÷ imgHeight)
-        if print == 1
-            println("Blocks: ", blocks_row)
-            println("Blocks: ", blocks_col)
-            println("Grids, col: $grids_col, row: $grids_row")
-        end
-        conv_GPU = CuArray(conv)
-        out1_GPU = CuArray(zeros(Float32, 1, width - 2 * apron, height))
-        out2_GPU = CuArray(zeros(Float32, 1, width - 2 * apron, height - 2 * apron * height ÷ imgHeight))
-        sharedMemSize = blocks_row[1] * blocks_row[2] * (sizeof(Float32)) # shared memory size bytes
-        if blocks_row[1] * blocks_row[2] >= width
-            if print == 1
-                println("more than one row in a block")
-                println("Shared memory size: ", sharedMemSize / 1024, " KB")
-                println("Convolution kernel: ", conv)
-            end
-            @cuda blocks = grids_row threads = blocks_row shmem = sharedMemSize row_kernel_strips(inp_GPU, conv_GPU, out1_GPU, width, height, apron, print)
-            @cuda blocks = grids_col threads = blocks_col shmem = sharedMemSize col_kernel(out1_GPU, conv_GPU, out2_GPU, width, height, imgHeight, apron)
-        else
-            if print == 1
-                println("many blocks in a row")
-                println("Shared memory size: ", sharedMemSize / 1024, " KB")
-                println("Convolution kernel: ", conv)
-            end
-            @cuda blocks = grids_row threads = blocks_row shmem = sharedMemSize row_kernel_strip(inp_GPU, conv_GPU, out1_GPU, width, height, apron, print)
-            @cuda blocks = grids_col threads = blocks_col shmem = sharedMemSize col_kernel(out1_GPU, conv_GPU, out2_GPU, width, height, imgHeight, apron)
-        end
-        if print == 1
-            println("Done")
-        end
-        return Array(out2_GPU), Array(out1_GPU)
-        return 1, 2
-    end
-end
-
-# imgNum = 16
-nimages = 5
-println("Here we go!")
-# for nimages in 1:imgNum
-img = []
-imgHeight = 0
-time_taken = 0
-begin
-    for i in 1:nimages
-        img_temp = OpenCV.imread("assets/DJI_20240328_234918_14_null_beauty.mp4_frame_$i.png", OpenCV.IMREAD_GRAYSCALE)
-        img_temp = convert(Array{Float32}, img_temp)
+let
+    println("Here we go!")
+    nImages = 60
+    img = []
+    imgWidth = 0
+    time_taken = 0
+    # load the images
+    for i in 1:nImages
+        img_temp = Float32.(Gray.(FileIO.load("assets/DJI_20240328_234918_14_null_beauty.mp4_frame_$i.png")))
         if i == 1
-            global img = img_temp
-            global imgHeight = size(img_temp, 3)
+            img = img_temp
+            imgWidth = size(img, 2)
         else
-            global img = cat(img, img_temp, dims=3)
+            img = cat(img, img_temp, dims=2)
         end
     end
 
-    start = time()
-    mat_image = OpenCV.Mat(img)
-    OpenCV.imwrite("assets/gaussian_before.png", mat_image)
+    height, width = size(img)
+    println(size(img))
+    save("assets/gaussian_new_0.png", colorview(Gray, collect(img)))
 
-    schema = Dict(:name => "gaussian1D", :sigma => 1.6, :epsilon => 0.1725)
+    schemaBase = Dict(:name => "gaussian1D", :epsilon => 0.1725)
 
-    out2, out1 = convolve(img, schema, imgHeight, 1)
+    layers = 5
+    octaves = 1
+    schemas = getSchemas(schemaBase, 1.6, sqrt(2), layers)
+    aprons = getApron(schemas)
 
-    schema1 = Dict(:name => "gaussian1D", :sigma => 1.6, :epsilon => 0.1725)
-    schema2 = Dict(:name => "gaussian1D", :sigma => 2.2627, :epsilon => 0.1725)
-    schema3 = Dict(:name => "gaussian1D", :sigma => 3.2, :epsilon => 0.1725)
-    schema4 = Dict(:name => "gaussian1D", :sigma => 4.5254, :epsilon => 0.1725)
-    schema5 = Dict(:name => "gaussian1D", :sigma => 6.4, :epsilon => 0.1725)
+    # create GPU elements
+    img_gpu = CuArray(img)
+    buffer = CUDA.zeros(Float32, height, width)
+    conv_gpus = []
+    out_gpus = []
+    for j in 1:octaves
+        out_gpus_octave = []
+        for i in 1:layers
+            # out_gpu = CUDA.zeros(Float32, height - 2 * aprons[i], width - 2 * nImages * aprons[i])
+            out_gpu = CUDA.zeros(Float32, height, width)
+            push!(out_gpus_octave, out_gpu)
+            if j == 1
+                kernel = reshape(getGaussianKernel(2 * aprons[i] + 1, schemas[i][:sigma]), 2 * aprons[i] + 1)
+                push!(conv_gpus, CuArray(kernel))
+            end
+        end
+        push!(out_gpus, out_gpus_octave)
+    end
 
-    iterations = 5
+
+    # i = 1
+    # warmup_inp = CUDA.rand(Float32, 1080, 1920)
+    # warmupout_gpus = []
+    # for i in 1:layers
+    #     warmupout_gpu = CUDA.zeros(Float32, 1080 - 2 * aprons[i], 1920 - 2 * aprons[i])
+    #     push!(warmupout_gpus, warmupout_gpu)
+    # end
+    doLayersConvolvesAndDoGAndOctave(img_gpu, out_gpus, buffer, conv_gpus, aprons, height, width, imgWidth, layers, octaves)
+    println("Warmup done!")
+    iterations = 1
     for i in 1:iterations
-        # try
-        start_t = time()
-        out2, out1 = convolve(img, schema1, imgHeight, 0)
-        out2, out1 = convolve(img, schema2, imgHeight, 0)
-        out2, out1 = convolve(img, schema3, imgHeight, 0)
-        out2, out1 = convolve(img, schema4, imgHeight, 0)
-        out2, out1 = convolve(img, schema5, imgHeight, 0)
-        end_t = time()
-        global time_taken += end_t - start_t
-        if i == iterations
-            mat_image1 = OpenCV.Mat(out1)
-            mat_image2 = OpenCV.Mat(out2)
-            OpenCV.imwrite("assets/gaussian_1.png", mat_image1)
-            OpenCV.imwrite("assets/gaussian_2.png", mat_image2)
-        end
-        # if i % (iterations ÷ 20) == 0
-        #     println("Iteration: ", i)
-        #     CUDA.memory_status()
-        # end
-        # if i > 75
-        #     println("Iteration: ", i)
-        #     CUDA.memory_status()
-        # end
-        # catch e
-        #     println("Error: ", e)
-        #     continue
-        # end
+        time_taken += doLayersConvolvesAndDoGAndOctave(img_gpu, out_gpus, buffer, conv_gpus, aprons, height, width, imgWidth, layers, octaves)
     end
-    println("NO L2 CACHE: Time taken per iteration: ", time_taken / (iterations * nimages), " seconds per image when $nimages images are processed at once")
+    println("Time taken: $(time_taken / (iterations * nImages))")
+    for j in 1:octaves
+        for i in 1:layers
+            # save("assets/gaussian_new_$([i])_1.png", colorview(Gray, collect(buffer)))
+            # save("assets/gaussian_new_$([i]).png", colorview(Gray, collect(out_gpus[j][i])))
+            save("assets/DoG_$([i]).png", colorview(Gray, Array(out_gpus[j][i])))
+            # out = collect(out_gpus[j][i])
+            # save("assets/DoG_$([i]).txt", collect(out_gpus[j][i]))
+            # writedlm("assets/DoG_$([i]).csv", Array(out_gpus[j][i]), ',')
+        end
+    end
+    # println(aprons)
 end
