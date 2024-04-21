@@ -117,9 +117,42 @@ function row_kernel(inp, conv, out, inpH::Int16, buffH::Int16, width::Int32, img
 
 end
 
+function resample_kernel(inp, out)
+    blockNum::UInt32 = blockIdx().x - 1 + (blockIdx().y - 1) * gridDim().x # block number, column major, 0-indexed
+    threadNum::UInt16 = threadIdx().x - 1
+    threads::Int16 = blockDim().x
+
+    data = CuDynamicSharedArray(Float32, threads)
+
+    h, w = size(inp)
+    outPX::Int32 = blockNum * threads + threadNum + 1
+    outX::Int32 = (outPX - 1) ÷ (h ÷ 2) # 0-indexed
+    outY::Int16 = (outPX - 1) % (h ÷ 2) # 0-indexed
+
+    thisX::Int32 = 2 * outX # 0-indexed
+    thisY::Int16 = 2 * outY # 0-indexed
+    thisPX::Int32 = thisY + thisX * h + 1
+
+    # fill the shared memory
+    if thisPX <= h * w
+        data[threadNum+1] = inp[thisPX]
+    end
+    sync_threads()
+
+    # convolution
+    # if threadNum % 100 == 0
+    #     @cuprintln("thisPX: $thisPX, outPX: $outPX, h: $h, w: $w")
+    # end
+    if outPX <= (h * w) ÷ 4
+        out[outPX] = data[threadNum+1]
+    end
+    return
+end
+
 function doLayersConvolvesAndDoGAndOctave(img_gpu, out_gpus, buffer, conv_gpus, aprons, height, width, imgWidth, layers, octaves)
     time_taken = 0
     for j in 1:octaves
+        # println("performing octave $j")
         for i in 1:layers
             # assuming height <= 1024
             threads_column = 1024 #32 * 32
@@ -128,7 +161,8 @@ function doLayersConvolvesAndDoGAndOctave(img_gpu, out_gpus, buffer, conv_gpus, 
                 threads_row = (threads_row[1] ÷ 2, threads_row[2] * 2)
             end
             # println("threads_column: $threads_column, threads_row: $threads_row")
-            if cld(height, prod(threads_column)) > 1
+            # println(cld(height, prod(threads_column)))
+            if cld(height, prod(threads_column)) >= 1
                 blocks_column = makeThisNearlySquare((cld(height - 2 * aprons[i], threads_column - 2 * aprons[i]), width))
                 # println("org_blocks_column: $((cld(height-2*aprons[i], threads_column-2*aprons[i]), width))")
                 # println("blocks_column: $blocks_column")
@@ -146,14 +180,19 @@ function doLayersConvolvesAndDoGAndOctave(img_gpu, out_gpus, buffer, conv_gpus, 
                 # println(launch_configuration(kernel.fun))
                 # println("h-2ap:$(Int16(height - 2 * aprons[i])), h: $(Int16(height)), w: $(Int32(width)), imW: $(Int16(imgWidth)), apron: $(Int8(aprons[i]))")
                 time_taken += CUDA.@elapsed @cuda threads = threads_row blocks = blocks_row shmem = shmem_row row_kernel(buffer, conv_gpus[i], out_gpus[j][i], Int16(height - 2 * aprons[i]), Int16(height), Int32(width), Int16(imgWidth), Int8(aprons[i]))
-                # save("assets/gaussian_new_$([i])_1_int.png", colorview(Gray, collect(buffer)))
-                # save("assets/gaussian_new_$([i])_2_int.png", colorview(Gray, collect(out_gpus[j][i])))
+                # save("assets/gaussian_new_o$(j)_l$(i)_r.png", colorview(Gray, collect(buffer)))
+                # save("assets/gaussian_new_o$(j)_l$(i)_rc.png", colorview(Gray, collect(out_gpus[j][i])))
             end
         end
+        time_taken += CUDA.@elapsed buffer = CUDA.zeros(Float32, cld(height, 2), cld(width, 2))
+        time_taken += CUDA.@elapsed img_gpu = CUDA.zeros(Float32, cld(height, 2), cld(width, 2))
+        time_taken += CUDA.@elapsed @cuda threads = 1024 blocks = makeThisNearlySquare((cld(height * width ÷ 4, 1024), 1)) shmem = 1024 * sizeof(Float32) resample_kernel(out_gpus[j][3], img_gpu)
         for i in 1:(layers-1)
             time_taken += CUDA.@elapsed out_gpus[j][i] = out_gpus[j][i+1] .- out_gpus[j][i]
             time_taken += CUDA.@elapsed out_gpus[j][i] = out_gpus[j][i] .* (out_gpus[j][i] .> 0.0)
         end
+        height = height ÷ 2
+        width = width ÷ 2
     end
     return time_taken
 end
@@ -175,7 +214,7 @@ end
 
 let
     println("Here we go!")
-    nImages = 60
+    nImages = 64
     img = []
     imgWidth = 0
     time_taken = 0
@@ -196,13 +235,17 @@ let
 
     schemaBase = Dict(:name => "gaussian1D", :epsilon => 0.1725)
 
-    layers = 5
-    octaves = 1
+    layers = 3
+    octaves = 4
     schemas = getSchemas(schemaBase, 1.6, sqrt(2), layers)
     aprons = getApron(schemas)
 
     # create GPU elements
     img_gpu = CuArray(img)
+    # buffer_resample = CUDA.zeros(Float32, height ÷ 2, width ÷ 2)
+    # @cuda threads = 1024 blocks = makeThisNearlySquare((cld(height * width ÷ 4, 1024), 1)) shmem=1024*sizeof(Float32) resample_kernel(img_gpu, buffer_resample)
+    # save("assets/resample.png", colorview(Gray, Array(buffer_resample)))
+
     buffer = CUDA.zeros(Float32, height, width)
     conv_gpus = []
     out_gpus = []
@@ -210,7 +253,7 @@ let
         out_gpus_octave = []
         for i in 1:layers
             # out_gpu = CUDA.zeros(Float32, height - 2 * aprons[i], width - 2 * nImages * aprons[i])
-            out_gpu = CUDA.zeros(Float32, height, width)
+            out_gpu = CUDA.zeros(Float32, cld(height, (2^(j - 1))), cld(width, (2^(j - 1))))
             push!(out_gpus_octave, out_gpu)
             if j == 1
                 kernel = reshape(getGaussianKernel(2 * aprons[i] + 1, schemas[i][:sigma]), 2 * aprons[i] + 1)
@@ -230,16 +273,16 @@ let
     # end
     doLayersConvolvesAndDoGAndOctave(img_gpu, out_gpus, buffer, conv_gpus, aprons, height, width, imgWidth, layers, octaves)
     println("Warmup done!")
-    iterations = 1
+    iterations = 10
     for i in 1:iterations
         time_taken += doLayersConvolvesAndDoGAndOctave(img_gpu, out_gpus, buffer, conv_gpus, aprons, height, width, imgWidth, layers, octaves)
     end
-    println("Time taken: $(time_taken / (iterations * nImages))")
+    println("Time taken: $(round(time_taken / (iterations * nImages), digits=5))s for $layers layers and $octaves octaves per image @ $nImages images at a time")
     for j in 1:octaves
-        for i in 1:layers
+        for i in 1:(layers-1)
             # save("assets/gaussian_new_$([i])_1.png", colorview(Gray, collect(buffer)))
             # save("assets/gaussian_new_$([i]).png", colorview(Gray, collect(out_gpus[j][i])))
-            save("assets/DoG_$([i]).png", colorview(Gray, Array(out_gpus[j][i])))
+            save("assets/DoG_o$(j)l$(i).png", colorview(Gray, Array(out_gpus[j][i])))
             # out = collect(out_gpus[j][i])
             # save("assets/DoG_$([i]).txt", collect(out_gpus[j][i]))
             # writedlm("assets/DoG_$([i]).csv", Array(out_gpus[j][i]), ',')
