@@ -170,7 +170,7 @@ function App() {
             type="image/svg+xml"
             alt="spiral logo"
           />
-          <p id="myname">Let's OpenCudaV</p>
+          <p id="myname">Let's OpenC<span className='light small'>UDA</span>V</p>
           <object
             data={mvl}
             id="mvl"
