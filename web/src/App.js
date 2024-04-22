@@ -274,7 +274,7 @@ function App() {
             </div>
             <div id="pf_con_con">
               <div id="pfs_container" className="medium">
-                <p className="pfTitle">DATASET</p>
+                {/* <p className="pfTitle">DATASET</p> */}
                 <div className="row row-left">
                   <div className="img img-left">
                     <img src={epipolar} alt="hello" />
@@ -317,7 +317,7 @@ function App() {
                   <div>
                     <p>
                       <span className="head">
-                        <span className="lime">2 </span> Gaussian Filtering
+                        <span className="lime">2 </span> Gaussian Filtering for Image Blurring
                       </span>
                     </p>
                     <p>
