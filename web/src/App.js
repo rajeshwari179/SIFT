@@ -734,40 +734,22 @@ end`}
                 </div>
                 <div className="row">
                   <div>
-                    <p>
-                      <span className="head">
-                        <span className="lime">2 </span> Vertex Colors
-                      </span>
-                    </p>
-                    <p>
-                      We first postulated that a vertex will have only one
-                      color. We then changed our approach to have a vertex have
-                      multiple colors based on the angle of view. We are
-                      currently working on implementing this approach. This will
-                      allow us to have a more realistic 3D model and
-                      characterize specular effects better.
-                    </p>
+                    
+                    
+                   
                   </div>
                 </div>
                 <div className="row">
                   <div>
                     <p>
-                      <span className="head">
-                        <span className="lime">3 </span> Interest Points
-                      </span>
+                     
                     </p>
-                    <p>
-                      Although our approach primarily relies on interest points
-                      being necessarily vertices, we are also considering the
-                      possibility of using lines and their angles as another
-                      "feature"-set. This will probably allow us to generate
-                      surfaces using triangular meshes and will be a more robust
-                      approach.
-                    </p>
+                   
                   </div>
                 </div>
               </div>
             </div>
+
             <div id="pf_con_con">
               <div id="pfs_container" className="short">
                 <p className="pfTitle">Results</p>
@@ -793,23 +775,7 @@ end`}
                     </p>
                   </div>
                 </div>
-                <div className="row">
-                  <div>
-                    <p>
-                      <span className="head">
-                        <span className="lime">2 </span> Vertex Colors
-                      </span>
-                    </p>
-                    <p>
-                      We first postulated that a vertex will have only one
-                      color. We then changed our approach to have a vertex have
-                      multiple colors based on the angle of view. We are
-                      currently working on implementing this approach. This will
-                      allow us to have a more realistic 3D model and
-                      characterize specular effects better.
-                    </p>
-                  </div>
-                </div>
+                
                 <div className="row">
                   <div>
                     <p>
@@ -825,6 +791,168 @@ end`}
                       surfaces using triangular meshes and will be a more robust
                       approach.
                     </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+           
+            <div id="pf_con_con">
+              <div id="pfs_container" className="short">
+              <p className="pfTitle">Challenges</p>
+                <div className="row">
+                  <div>
+                    
+                    <p>
+                      <span className="head">
+                        {/* <span className="lime">1 </span>Structure from Motion */}
+                      </span>
+                    </p>
+                    <p>
+                    Throughout our project, we encountered several challenges that influenced our approach 
+                    and focus. Initially, one of the major challenges was obtaining access to the newly 
+                    installed H100 GPUs on the pace cluster. Setting up the environment with compatible 
+                    versions of Julia and CUDA was also challenging due to memory limitations. 
+                    These initial hurdles delayed our progress and required troubleshooting to ensure 
+                    a stable development environment.
+                    </p>
+                    <p>
+                    
+                    
+                    Another challenge was aligning our project goals with the reality of processing 
+                    large videos. Our initial proposal aimed to generate a stereo video from a single 
+                    camera's output. However, optimizing the SIFT algorithm for videos with over 1000 
+                    frames proved to be more time-consuming than anticipated. As a result, we shifted 
+                    our focus to optimizing the SIFT algorithm for large video datasets, achieving 
+                    excellent results in terms of speed and efficiency.
+                    </p>
+                  </div>
+                </div>
+                <p className="pfTitle">Future Work</p>
+                <div className="row">
+                  <div>
+                    
+                    <p>
+                      
+                      <span className="head">
+                        {/* <span className="lime">1 </span>Structure from Motion */}
+                      </span>
+                    </p>
+                    <p>
+                    While we couldn't complete the entire project as initially planned, there are several areas we identified for future work:
+                    </p>
+                    <p>
+                    <span className="head">
+                        <span className="lime">1 </span> Feature Mapping
+                      </span>
+                      </p>
+                      <p>
+                      Implementing KD-tree algorithms for efficient feature mapping across different frames of the video, 
+                      focusing on handling high-dimensional data efficiently.
+                      </p>
+                    
+                  </div>
+
+                  
+                </div>
+                <div className="row">
+                  <div>
+                  <p>
+                  <span className="head">
+                        <span className="lime">2 </span>Fundamental Matrix Computation
+                      </span> </p>
+                    
+                      
+                      <p>
+                      Using matched keypoints to compute the Fundamental Matrix (F) that 
+                      encapsulates the epipolar geometry between images, employing the RANSAC 
+                      algorithm to ensure accurate results.
+                    </p>
+                  <div>
+                   
+
+                   
+                    
+                  </div></div>
+                </div>
+
+                <div className="row">
+                  <div>
+                  <p>
+                  <span className="head">
+                        <span className="lime">3 </span>	3D Coordinate Calculation
+                      </span> </p>
+                    
+                      
+                      <p>
+                      Triangulating the 3D coordinates of matched keypoints using the epipolar lines 
+                      from the Fundamental Matrix, followed by computing the angle with respect to the 
+                      real coordinate axes (X, Y, Z).
+                    </p>
+                  <div>
+                  
+                   
+                   
+                   
+                    
+                  </div></div>
+
+
+                
+                </div>
+
+                <div className="row">
+                  <div>
+                  <p>
+                  <span className="head">
+                        <span className="lime">4 </span>	Goldberg Polygon Binning
+                      </span> </p>
+                    
+                      
+                      <p>
+                      Categorizing points based on their angles using the Goldberg Polygon technique to 
+                      create a color histogram or map capturing color variations from different viewpoints
+                    </p>
+                  <div>
+                  
+                   
+                   
+                   
+                    
+                  </div></div>
+
+
+                
+                </div>
+
+                <div className="row">
+                  <div>
+                  <p>
+                  <span className="head">
+                        <span className="lime">5 </span>Color Data Utilization for Stereo Images
+                      </span> </p>
+                    
+                      
+                      <p>
+                      Utilizing the RGB values stored in different angle bins to generate stereo images or 
+                      3D reconstructions, providing a detailed visualization of the scene or object.
+                    </p>
+                  <div>
+                  
+                   
+                   
+                   
+                    
+                  </div></div>
+
+
+                
+                </div>
+                <div className="row">
+                  <div>
+                    <p>
+                     
+                    </p>
+                    
                   </div>
                 </div>
               </div>
