@@ -205,28 +205,6 @@ function App() {
                     (SIFT) for CUDA enabled devices, with memory optimization
                     and scope for large parallelization.
                   </p>
-                  {/* <div className="flex concept">
-                    <p className="pfContent pad">Single video</p>
-                  </div> */}
-                  {/* <object
-                    data={right}
-                    className="rightArrow"
-                    type="image/svg+xml"
-                    alt="spiral logo"
-                  /> */}
-
-                  {/* <div className="flex concept">
-                    <p className="pfContent pad">Structure from Motion</p>
-                    </div>
-                    <object
-                    data={right}
-                    className="rightArrow"
-                    type="image/svg+xml"
-                    alt="spiral logo"
-                  /> */}
-                  {/* <div className="flex concept">
-                    <p className="pfContent pad">Stereo Pair</p>
-                  </div> */}
                 </div>
               </div>
             </div>
