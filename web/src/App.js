@@ -274,7 +274,7 @@ function App() {
             </div>
             <div id="pf_con_con">
               <div id="pfs_container" className="medium">
-                {/* <p className="pfTitle">DATASET</p> */}
+                <p className="pfTitle">Approach</p>
                 <div className="row row-left">
                   <div className="img img-left">
                     <img src={epipolar} alt="hello" />
@@ -518,7 +518,68 @@ function App() {
             </div> */}
             <div id="pf_con_con">
               <div id="pfs_container" className="short">
-                <p className="pfTitle">Experiments</p>
+                <p className="pfTitle">Experiment Setup</p>
+                <div className="row">
+                  <div>
+                    <p>
+                      <span className="head">
+                        {/* <span className="lime">1 </span>Structure from Motion */}
+                      </span>
+                    </p>
+                    <p>
+                      In our experiments, we generated a dataset comprising 1980
+                      frames extracted from a 66-second video. To efficiently
+                      apply convolution with Gaussian blurring in both vertical
+                      and horizontal directions, we processed 128 images
+                      simultaneously, arranged in a row. This approach was
+                      designed to harness the high DRAM availability of modern
+                      GPUs. Specifically, we utilized an NVIDIA H100 80GB HBM3
+                      GPU from the Georgia Tech's PACE cluster. With CUDA
+                      Version 12.2 and Julia 1.9.2, we leveraged the parallel
+                      processing capabilities of our GPU to achieve optimal
+                      performance.
+                    </p>
+                  </div>
+                </div>
+                <div className="row">
+                  <div>
+                    <p>
+                      <span className="head">
+                        <span className="lime">2 </span> Vertex Colors
+                      </span>
+                    </p>
+                    <p>
+                      We first postulated that a vertex will have only one
+                      color. We then changed our approach to have a vertex have
+                      multiple colors based on the angle of view. We are
+                      currently working on implementing this approach. This will
+                      allow us to have a more realistic 3D model and
+                      characterize specular effects better.
+                    </p>
+                  </div>
+                </div>
+                <div className="row">
+                  <div>
+                    <p>
+                      <span className="head">
+                        <span className="lime">3 </span> Interest Points
+                      </span>
+                    </p>
+                    <p>
+                      Although our approach primarily relies on interest points
+                      being necessarily vertices, we are also considering the
+                      possibility of using lines and their angles as another
+                      "feature"-set. This will probably allow us to generate
+                      surfaces using triangular meshes and will be a more robust
+                      approach.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="pf_con_con">
+              <div id="pfs_container" className="short">
+                <p className="pfTitle">Results</p>
                 <div className="row">
                   <div>
                     <p>

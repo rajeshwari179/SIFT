@@ -5,7 +5,7 @@ __pycache__/
 
 assets/videos/*
 assets/images/*
-*.png
+
 *.pdf
 content/*
 opencv/*
