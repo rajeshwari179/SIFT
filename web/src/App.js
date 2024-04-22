@@ -997,43 +997,46 @@ end`}
               </div>
             </div>
             <div id="pf_con_con">
-              <div id="pfs_container" className="short">
-                <p className="pfTitle">References</p>
-                <div className="row">
-                  <div>
-                    <p className="cite">
-                      <span className="lime cite">1 </span> J. Smith et al.,
-                      "Stereo Vision-Based 3D Reconstruction of Indoor Spaces
-                      Using HDR Cameras," IEEE Transactions on Robotics, vol.
-                      38, no. 4, pp. 567-580, 2023.
-                    </p>
-                  </div>
-                </div>
-                <div className="row">
-                  <div>
-                    <p className="cite">
-                      <span className="lime cite">2 </span> A. Jones et al.,
-                      "Improved Stereo Image Generation Considering Object
-                      Rotation," Applied Sciences, vol. 10, no. 9, p. 3101,
-                      2020.
-                    </p>
-                  </div>
-                </div>
-                <div className="row">
-                  <div>
-                    <p className="cite">
-                      <span className="lime cite">3 </span> P. Moulon et al.,
-                      "OpenMVG: Open Multiple View Geometry," GitHub, 2019.
-                      [Online]. Available:{' '}
-                      <a href="https://github.com/openMVG" target="_blank">
-                        https://github.com/openMVG
-                      </a>
-                      . [Accessed: Jan. 15, 2022].
-                    </p>
-                  </div>
-                </div>
-              </div>
+    <div id="pfs_container" className="short">
+        <p className="pfTitle">References</p>
+        <div className="row">
+            <div>
+                <p className="cite">
+                    <span className="lime cite">1 </span> D. G. Lowe, "Distinctive image features from scale-invariant keypoints," *International Journal of Computer Vision*, vol. 60, no. 2, pp. 91-110, 2004. [Online]. Available: <a href="https://www.cs.ubc.ca/~lowe/papers/ijcv04.pdf" target="_blank">https://www.cs.ubc.ca/~lowe/papers/ijcv04.pdf</a>.
+                </p>
             </div>
+        </div>
+        <div className="row">
+            <div>
+                <p className="cite">
+                    <span className="lime cite">2 </span> NVIDIA Corporation, "CUDA convolutionSeparable SDK documentation," [Online]. Available: <a href="https://developer.download.nvidia.com/compute/cuda/1.1-Beta/x86_64_website/projects/convolutionSeparable/doc/convolutionSeparable.pdf" target="_blank">https://developer.download.nvidia.com/compute/cuda/1.1-Beta/x86_64_website/projects/convolutionSeparable/doc/convolutionSeparable.pdf</a>.
+                </p>
+            </div>
+        </div>
+        <div className="row">
+            <div>
+                <p className="cite">
+                    <span className="lime cite">3 </span> M. N. S. M. Omar, M. F. A. Rasid, and Z. M. Zain, "Parallelization and Optimization of SIFT on GPU Using CUDA," *ResearchGate*, 2016. [Online]. Available: <a href="https://www.researchgate.net/publication/269302930_Parallelization_and_Optimization_of_SIFT_on_GPU_Using_CUDA" target="_blank">https://www.researchgate.net/publication/269302930_Parallelization_and_Optimization_of_SIFT_on_GPU_Using_CUDA</a>.
+                </p>
+            </div>
+        </div>
+        <div className="row">
+            <div>
+                <p className="cite">
+                    <span className="lime cite">4 </span> A. Minnaar, "Implementing Convolutions in CUDA," 2019. [Online]. Available: <a href="https://alexminnaar.com/2019/07/12/implementing-convolutions-in-cuda.html" target="_blank">https://alexminnaar.com/2019/07/12/implementing-convolutions-in-cuda.html</a>.
+                </p>
+            </div>
+        </div>
+        <div className="row">
+            <div>
+                <p className="cite">
+                    <span className="lime cite">5 </span> S. S. Kumar and K. S. Babu, "Face Detection Using OpenCV," *Journal of Signal and Information Processing*, vol. 7, no. 2, pp. 103-112, 2016. [Online]. Available: <a href="https://www.scirp.org/journal/paperinformation?paperid=73133" target="_blank">https://www.scirp.org/journal/paperinformation?paperid=73133</a>.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
           </div>
         </div>
       </div>
