@@ -170,7 +170,9 @@ function App() {
             type="image/svg+xml"
             alt="spiral logo"
           />
-          <p id="myname">Let's OpenC<span className='light small'>UDA</span>V</p>
+          <p id="myname">
+            Let's OpenC<span className="light small">UDA</span>V
+          </p>
           <object
             data={mvl}
             id="mvl"
@@ -332,7 +334,8 @@ function App() {
                   <div>
                     <p>
                       <span className="head">
-                        <span className="lime">2 </span> Gaussian Filtering and Separability
+                        <span className="lime">2 </span> Gaussian Filtering and
+                        Separability
                       </span>
                     </p>
                     <p>
@@ -708,8 +711,182 @@ end`}
               </div>
             </div>
             <div id="pf_con_con">
-              <div id="pfs_container" className="short">
+              <div id="pfs_container" className="medium">
                 <p className="pfTitle">Experiment Setup</p>
+                <div className="row">
+                  <div>
+                    <p>
+                      <span className="head">
+                        <span className="lime">1 </span> CUDA and Occupancy API
+                      </span>
+                    </p>
+                    <p>
+                      We first attempted to run 1024 threads per block. However,
+                      some kernels, such as the row convolution kernel, were not
+                      able to run with this configuration. We then tried
+                      lowering the threads per block, which worked for all
+                      kernels. We also experimented with different block sizes
+                      and found that 16x48 (768 threads per block) was the
+                      optimal block size for row kernel. This is because the
+                      number of times apron elements are loaded into shared
+                      memory is minimized, and the number of threads that are
+                      actually used is maximized. It also allows for a half-warp
+                      memory coallescing, making it more efficient for older and
+                      while still being efficient for newer GPUs.{' '}
+                    </p>
+                    <p>
+                      Although the grid dimensions do not matter, we used a
+                      nearly square grid for all kernel to maximize the
+                      dimension of a grid since there is a hard limit on the
+                      number of blocks in each direction.
+                    </p>
+                    <p>
+                      We used the occupancy API to determine the optimal block
+                      size for each kernel. The occupancy API provides
+                      information about the maximum number of threads that can
+                      be run on a multiprocessor, helping us optimize the
+                      performance of our CUDA kernels. CUDA calls are shown
+                      below.
+                    </p>
+                    <SyntaxHighlighter
+                      language="julia"
+                      style={tomorrowNightBright}
+                      showLineNumbers={true}
+                      wrapLines={true}
+                      className="code medium long"
+                    >
+                      {`function doLayersConvolvesAndDoGAndOctave(img_gpu, out_gpus, buffer, conv_gpus, aprons, height, width, imgWidth, layers, octaves)
+    time_taken = 0
+    for j in 1:octaves
+        for i in 1:layers
+            threads_column = 1024 #32 * 32
+            threads_row = (16, 768 ÷ 16)
+            while threads_row[2] - 2 * aprons[i] <= 0 && threads_row[1] > 4
+                threads_row = (threads_row[1] ÷ 2, threads_row[2] * 2)
+            end
+
+            if cld(height, prod(threads_column)) >= 1
+                blocks_column = makeThisNearlySquare((cld(height - 2 * aprons[i], threads_column - 2 * aprons[i]), width))
+                blocks_row = makeThisNearlySquare((cld(height - 2 * aprons[i], threads_row[1]) * cld(width - 2 * aprons[i], threads_row[2] - 2 * aprons[i]) + cld(height - 2 * aprons[i], threads_row[1]) / 2 * cld(imgWidth - 2 * aprons[i], threads_row[2] - 2 * aprons[i]), 1))
+                shmem_column = threads_column * sizeof(Float32)
+                shmem_row = threads_row[1] * threads_row[2] * sizeof(Float32)
+
+                time_taken += CUDA.@elapsed buffer .= 0
+                time_taken += CUDA.@elapsed @cuda threads = threads_column blocks = blocks_column shmem = shmem_column col_kernel_strips(img_gpu, conv_gpus[i], buffer, Int32(width), Int16(height), Int8(aprons[i]))
+                time_taken += CUDA.@elapsed @cuda threads = threads_row blocks = blocks_row shmem = shmem_row row_kernel(buffer, conv_gpus[i], out_gpus[j][i], Int16(height - 2 * aprons[i]), Int16(height), Int32(width), Int16(imgWidth), Int8(aprons[i]))
+            end
+        end
+        time_taken += CUDA.@elapsed buffer = CUDA.zeros(Float32, cld(height, 2), cld(width, 2))
+        time_taken += CUDA.@elapsed img_gpu = CUDA.zeros(Float32, cld(height, 2), cld(width, 2))
+        time_taken += CUDA.@elapsed @cuda threads = 1024 blocks = makeThisNearlySquare((cld(height * width ÷ 4, 1024), 1)) shmem = 1024 * sizeof(Float32) resample_kernel(out_gpus[j][3], img_gpu)
+        for i in 1:(layers-1)
+            time_taken += CUDA.@elapsed out_gpus[j][i] = out_gpus[j][i+1] .- out_gpus[j][i]
+            time_taken += CUDA.@elapsed out_gpus[j][i] = out_gpus[j][i] .* (out_gpus[j][i] .> 0.0)
+        end
+        height = height ÷ 2
+        width = width ÷ 2
+    end
+    return time_taken
+end`}
+                    </SyntaxHighlighter>
+                    <p>Occupance API is used like so.</p>
+                    <SyntaxHighlighter
+                      language="julia"
+                      style={tomorrowNightBright}
+                      showLineNumbers={true}
+                      wrapLines={true}
+                      className="code medium"
+                    >
+                      {`kernel = @cuda name = "col" launch = false col_kernel_strips(img_gpu, conv_gpus[1], buffer, Int32(width), Int16(height), Int8(aprons[i]))
+println(launch_configuration(kernel.fun))
+kernel = @cuda name = "row" launch = false row_kernel(buffer, conv_gpus[i], out_gpus[j][i], Int16(height - 2 * aprons[i]), Int16(height), Int32(width), Int16(imgWidth), Int8(aprons[i]))
+println(launch_configuration(kernel.fun))`}
+                    </SyntaxHighlighter>
+                    <p>And finally, the grids are made nearly square like so.</p>
+                    <SyntaxHighlighter
+                      language="julia"
+                      style={tomorrowNightBright}
+                      showLineNumbers={true}
+                      wrapLines={true}
+                      className="code medium"
+                    >
+                      {`function makeThisNearlySquare(blocks)
+    product = prod(blocks)
+    X = floor(Int32, sqrt(product))
+    Y = X
+    while product % X != 0 && X / Y > 0.75
+        X -= 1
+    end
+
+    if product % X == 0
+        return Int32.((X, product ÷ X))
+    else
+        return Int32.((Y, cld(product, Y)))
+    end
+end`}
+                    </SyntaxHighlighter>
+                  </div>
+                </div>
+                <div className="row">
+                  <div>
+                    <p>
+                      <span className="head">
+                        <span className="lime">2 </span> Gaussian Kernel and
+                        Cut-off
+                      </span>
+                    </p>
+                    <p>
+                      The Gaussian kernel is a fundamental component of the SIFT
+                      algorithm, used for image blurring and feature detection.
+                      The kernel is defined by the Gaussian function, which is a
+                      bell-shaped curve that represents the distribution of
+                      values across the image. The Gaussian kernel is applied to
+                      the image to smooth out noise and reduce the impact of
+                      high-frequency components. This process helps in
+                      identifying stable keypoints and features in the image,
+                      making it easier to detect and match interest points
+                      across different scales.
+                    </p>
+                    <p>
+                      However, the Gaussian kernel has a cut-off point beyond
+                      which the values are negligible. This cut-off point is
+                      determined by the standard deviation of the Gaussian
+                      function, which controls the spread of the kernel. By
+                      setting an appropriate cut-off value, we can limit the
+                      size of the kernel and reduce the computational load. This
+                      optimization ensures that the convolution operation is
+                      efficient and fast, making the SIFT algorithm more
+                      scalable and practical for real-world applications.
+                    </p>
+                    <p>
+                      In our code, we implemented the Gaussian kernel such that
+                      the outermost un-normalized value is 0.1725.
+                      <MathJax className="math" inline={true}>
+                        {
+                          '$$\\epsilon=0.1725\\le e^{-X^2/(2\\sigma^2)}$$'
+                        }
+                      </MathJax> <MathJax className="math" inline={true}>
+                        {
+                          '$$\\Rightarrow \\text{apron}=\\sigma \\cdot \\sqrt{2\\ \\text{ln} (1/\\epsilon)} $$'
+                        }
+                      </MathJax>
+                      This ensures that the kernel is normalized and that the
+                      values beyond a certain point are negligible. 
+                    </p>
+                    <SyntaxHighlighter
+                      language="julia"
+                      style={tomorrowNightBright}
+                      showLineNumbers={true}
+                      wrapLines={true}
+                      className="code medium"
+                    >
+                      {`schema = Dict(:name => "gaussian1D", :epsilon => 0.1725, :sigma => 1.6)
+sigma = convert(Float64, schema[:sigma])
+epsilon = haskey(schema, :epsilon) ? schema[:epsilon] : 0.0001
+apron = ceil(Int, sigma * sqrt(-2 * log(epsilon)))`}
+                    </SyntaxHighlighter>
+                  </div>
+                </div>
                 <div className="row">
                   <div>
                     <p>
@@ -733,18 +910,11 @@ end`}
                   </div>
                 </div>
                 <div className="row">
-                  <div>
-                    
-                    
-                   
-                  </div>
+                  <div></div>
                 </div>
                 <div className="row">
                   <div>
-                    <p>
-                     
-                    </p>
-                   
+                    <p></p>
                   </div>
                 </div>
               </div>
@@ -775,7 +945,7 @@ end`}
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="row">
                   <div>
                     <p>
@@ -795,164 +965,141 @@ end`}
                 </div>
               </div>
             </div>
-           
+
             <div id="pf_con_con">
               <div id="pfs_container" className="short">
-              <p className="pfTitle">Challenges</p>
+                <p className="pfTitle">Challenges</p>
                 <div className="row">
                   <div>
-                    
                     <p>
                       <span className="head">
                         {/* <span className="lime">1 </span>Structure from Motion */}
                       </span>
                     </p>
                     <p>
-                    Throughout our project, we encountered several challenges that influenced our approach 
-                    and focus. Initially, one of the major challenges was obtaining access to the newly 
-                    installed H100 GPUs on the pace cluster. Setting up the environment with compatible 
-                    versions of Julia and CUDA was also challenging due to memory limitations. 
-                    These initial hurdles delayed our progress and required troubleshooting to ensure 
-                    a stable development environment.
+                      Throughout our project, we encountered several challenges
+                      that influenced our approach and focus. Initially, one of
+                      the major challenges was obtaining access to the newly
+                      installed H100 GPUs on the pace cluster. Setting up the
+                      environment with compatible versions of Julia and CUDA was
+                      also challenging due to memory limitations. These initial
+                      hurdles delayed our progress and required troubleshooting
+                      to ensure a stable development environment.
                     </p>
                     <p>
-                    
-                    
-                    Another challenge was aligning our project goals with the reality of processing 
-                    large videos. Our initial proposal aimed to generate a stereo video from a single 
-                    camera's output. However, optimizing the SIFT algorithm for videos with over 1000 
-                    frames proved to be more time-consuming than anticipated. As a result, we shifted 
-                    our focus to optimizing the SIFT algorithm for large video datasets, achieving 
-                    excellent results in terms of speed and efficiency.
+                      Another challenge was aligning our project goals with the
+                      reality of processing large videos. Our initial proposal
+                      aimed to generate a stereo video from a single camera's
+                      output. However, optimizing the SIFT algorithm for videos
+                      with over 1000 frames proved to be more time-consuming
+                      than anticipated. As a result, we shifted our focus to
+                      optimizing the SIFT algorithm for large video datasets,
+                      achieving excellent results in terms of speed and
+                      efficiency.
                     </p>
                   </div>
                 </div>
                 <p className="pfTitle">Future Work</p>
                 <div className="row">
                   <div>
-                    
                     <p>
-                      
                       <span className="head">
                         {/* <span className="lime">1 </span>Structure from Motion */}
                       </span>
                     </p>
                     <p>
-                    While we couldn't complete the entire project as initially planned, there are several areas we identified for future work:
+                      While we couldn't complete the entire project as initially
+                      planned, there are several areas we identified for future
+                      work:
                     </p>
                     <p>
-                    <span className="head">
+                      <span className="head">
                         <span className="lime">1 </span> Feature Mapping
                       </span>
-                      </p>
-                      <p>
-                      Implementing KD-tree algorithms for efficient feature mapping across different frames of the video, 
-                      focusing on handling high-dimensional data efficiently.
-                      </p>
-                    
+                    </p>
+                    <p>
+                      Implementing KD-tree algorithms for efficient feature
+                      mapping across different frames of the video, focusing on
+                      handling high-dimensional data efficiently.
+                    </p>
                   </div>
-
-                  
-                </div>
-                <div className="row">
-                  <div>
-                  <p>
-                  <span className="head">
-                        <span className="lime">2 </span>Fundamental Matrix Computation
-                      </span> </p>
-                    
-                      
-                      <p>
-                      Using matched keypoints to compute the Fundamental Matrix (F) that 
-                      encapsulates the epipolar geometry between images, employing the RANSAC 
-                      algorithm to ensure accurate results.
-                    </p>
-                  <div>
-                   
-
-                   
-                    
-                  </div></div>
-                </div>
-
-                <div className="row">
-                  <div>
-                  <p>
-                  <span className="head">
-                        <span className="lime">3 </span>	3D Coordinate Calculation
-                      </span> </p>
-                    
-                      
-                      <p>
-                      Triangulating the 3D coordinates of matched keypoints using the epipolar lines 
-                      from the Fundamental Matrix, followed by computing the angle with respect to the 
-                      real coordinate axes (X, Y, Z).
-                    </p>
-                  <div>
-                  
-                   
-                   
-                   
-                    
-                  </div></div>
-
-
-                
-                </div>
-
-                <div className="row">
-                  <div>
-                  <p>
-                  <span className="head">
-                        <span className="lime">4 </span>	Goldberg Polygon Binning
-                      </span> </p>
-                    
-                      
-                      <p>
-                      Categorizing points based on their angles using the Goldberg Polygon technique to 
-                      create a color histogram or map capturing color variations from different viewpoints
-                    </p>
-                  <div>
-                  
-                   
-                   
-                   
-                    
-                  </div></div>
-
-
-                
-                </div>
-
-                <div className="row">
-                  <div>
-                  <p>
-                  <span className="head">
-                        <span className="lime">5 </span>Color Data Utilization for Stereo Images
-                      </span> </p>
-                    
-                      
-                      <p>
-                      Utilizing the RGB values stored in different angle bins to generate stereo images or 
-                      3D reconstructions, providing a detailed visualization of the scene or object.
-                    </p>
-                  <div>
-                  
-                   
-                   
-                   
-                    
-                  </div></div>
-
-
-                
                 </div>
                 <div className="row">
                   <div>
                     <p>
-                     
+                      <span className="head">
+                        <span className="lime">2 </span>Fundamental Matrix
+                        Computation
+                      </span>{' '}
                     </p>
-                    
+
+                    <p>
+                      Using matched keypoints to compute the Fundamental Matrix
+                      (F) that encapsulates the epipolar geometry between
+                      images, employing the RANSAC algorithm to ensure accurate
+                      results.
+                    </p>
+                    <div></div>
+                  </div>
+                </div>
+
+                <div className="row">
+                  <div>
+                    <p>
+                      <span className="head">
+                        <span className="lime">3 </span> 3D Coordinate
+                        Calculation
+                      </span>{' '}
+                    </p>
+
+                    <p>
+                      Triangulating the 3D coordinates of matched keypoints
+                      using the epipolar lines from the Fundamental Matrix,
+                      followed by computing the angle with respect to the real
+                      coordinate axes (X, Y, Z).
+                    </p>
+                    <div></div>
+                  </div>
+                </div>
+
+                <div className="row">
+                  <div>
+                    <p>
+                      <span className="head">
+                        <span className="lime">4 </span> Goldberg Polygon
+                        Binning
+                      </span>{' '}
+                    </p>
+
+                    <p>
+                      Categorizing points based on their angles using the
+                      Goldberg Polygon technique to create a color histogram or
+                      map capturing color variations from different viewpoints
+                    </p>
+                    <div></div>
+                  </div>
+                </div>
+
+                <div className="row">
+                  <div>
+                    <p>
+                      <span className="head">
+                        <span className="lime">5 </span>Color Data Utilization
+                        for Stereo Images
+                      </span>{' '}
+                    </p>
+
+                    <p>
+                      Utilizing the RGB values stored in different angle bins to
+                      generate stereo images or 3D reconstructions, providing a
+                      detailed visualization of the scene or object.
+                    </p>
+                    <div></div>
+                  </div>
+                </div>
+                <div className="row">
+                  <div>
+                    <p></p>
                   </div>
                 </div>
               </div>
@@ -997,46 +1144,93 @@ end`}
               </div>
             </div>
             <div id="pf_con_con">
-    <div id="pfs_container" className="short">
-        <p className="pfTitle">References</p>
-        <div className="row">
-            <div>
-                <p className="cite">
-                    <span className="lime cite">1 </span> D. G. Lowe, "Distinctive image features from scale-invariant keypoints," *International Journal of Computer Vision*, vol. 60, no. 2, pp. 91-110, 2004. [Online]. Available: <a href="https://www.cs.ubc.ca/~lowe/papers/ijcv04.pdf" target="_blank">https://www.cs.ubc.ca/~lowe/papers/ijcv04.pdf</a>.
-                </p>
+              <div id="pfs_container" className="short">
+                <p className="pfTitle">References</p>
+                <div className="row">
+                  <div>
+                    <p className="cite">
+                      <span className="lime cite">1 </span> D. G. Lowe,
+                      "Distinctive image features from scale-invariant
+                      keypoints," *International Journal of Computer Vision*,
+                      vol. 60, no. 2, pp. 91-110, 2004. [Online]. Available:{' '}
+                      <a
+                        href="https://www.cs.ubc.ca/~lowe/papers/ijcv04.pdf"
+                        target="_blank"
+                      >
+                        https://www.cs.ubc.ca/~lowe/papers/ijcv04.pdf
+                      </a>
+                      .
+                    </p>
+                  </div>
+                </div>
+                <div className="row">
+                  <div>
+                    <p className="cite">
+                      <span className="lime cite">2 </span> NVIDIA Corporation,
+                      "CUDA convolutionSeparable SDK documentation," [Online].
+                      Available:{' '}
+                      <a
+                        href="https://developer.download.nvidia.com/compute/cuda/1.1-Beta/x86_64_website/projects/convolutionSeparable/doc/convolutionSeparable.pdf"
+                        target="_blank"
+                      >
+                        https://developer.download.nvidia.com/compute/cuda/1.1-Beta/x86_64_website/projects/convolutionSeparable/doc/convolutionSeparable.pdf
+                      </a>
+                      .
+                    </p>
+                  </div>
+                </div>
+                <div className="row">
+                  <div>
+                    <p className="cite">
+                      <span className="lime cite">3 </span> M. N. S. M. Omar, M.
+                      F. A. Rasid, and Z. M. Zain, "Parallelization and
+                      Optimization of SIFT on GPU Using CUDA," *ResearchGate*,
+                      2016. [Online]. Available:{' '}
+                      <a
+                        href="https://www.researchgate.net/publication/269302930_Parallelization_and_Optimization_of_SIFT_on_GPU_Using_CUDA"
+                        target="_blank"
+                      >
+                        https://www.researchgate.net/publication/269302930_Parallelization_and_Optimization_of_SIFT_on_GPU_Using_CUDA
+                      </a>
+                      .
+                    </p>
+                  </div>
+                </div>
+                <div className="row">
+                  <div>
+                    <p className="cite">
+                      <span className="lime cite">4 </span> A. Minnaar,
+                      "Implementing Convolutions in CUDA," 2019. [Online].
+                      Available:{' '}
+                      <a
+                        href="https://alexminnaar.com/2019/07/12/implementing-convolutions-in-cuda.html"
+                        target="_blank"
+                      >
+                        https://alexminnaar.com/2019/07/12/implementing-convolutions-in-cuda.html
+                      </a>
+                      .
+                    </p>
+                  </div>
+                </div>
+                <div className="row">
+                  <div>
+                    <p className="cite">
+                      <span className="lime cite">5 </span> S. S. Kumar and K.
+                      S. Babu, "Face Detection Using OpenCV," *Journal of Signal
+                      and Information Processing*, vol. 7, no. 2, pp. 103-112,
+                      2016. [Online]. Available:{' '}
+                      <a
+                        href="https://www.scirp.org/journal/paperinformation?paperid=73133"
+                        target="_blank"
+                      >
+                        https://www.scirp.org/journal/paperinformation?paperid=73133
+                      </a>
+                      .
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-        </div>
-        <div className="row">
-            <div>
-                <p className="cite">
-                    <span className="lime cite">2 </span> NVIDIA Corporation, "CUDA convolutionSeparable SDK documentation," [Online]. Available: <a href="https://developer.download.nvidia.com/compute/cuda/1.1-Beta/x86_64_website/projects/convolutionSeparable/doc/convolutionSeparable.pdf" target="_blank">https://developer.download.nvidia.com/compute/cuda/1.1-Beta/x86_64_website/projects/convolutionSeparable/doc/convolutionSeparable.pdf</a>.
-                </p>
-            </div>
-        </div>
-        <div className="row">
-            <div>
-                <p className="cite">
-                    <span className="lime cite">3 </span> M. N. S. M. Omar, M. F. A. Rasid, and Z. M. Zain, "Parallelization and Optimization of SIFT on GPU Using CUDA," *ResearchGate*, 2016. [Online]. Available: <a href="https://www.researchgate.net/publication/269302930_Parallelization_and_Optimization_of_SIFT_on_GPU_Using_CUDA" target="_blank">https://www.researchgate.net/publication/269302930_Parallelization_and_Optimization_of_SIFT_on_GPU_Using_CUDA</a>.
-                </p>
-            </div>
-        </div>
-        <div className="row">
-            <div>
-                <p className="cite">
-                    <span className="lime cite">4 </span> A. Minnaar, "Implementing Convolutions in CUDA," 2019. [Online]. Available: <a href="https://alexminnaar.com/2019/07/12/implementing-convolutions-in-cuda.html" target="_blank">https://alexminnaar.com/2019/07/12/implementing-convolutions-in-cuda.html</a>.
-                </p>
-            </div>
-        </div>
-        <div className="row">
-            <div>
-                <p className="cite">
-                    <span className="lime cite">5 </span> S. S. Kumar and K. S. Babu, "Face Detection Using OpenCV," *Journal of Signal and Information Processing*, vol. 7, no. 2, pp. 103-112, 2016. [Online]. Available: <a href="https://www.scirp.org/journal/paperinformation?paperid=73133" target="_blank">https://www.scirp.org/journal/paperinformation?paperid=73133</a>.
-                </p>
-            </div>
-        </div>
-    </div>
-</div>
-
           </div>
         </div>
       </div>

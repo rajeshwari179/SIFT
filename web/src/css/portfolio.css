@@ -99,6 +99,10 @@ p {
 a:visited {
   color: #dce706;
 }
+.code.long{
+  max-height: 80vh;
+
+}
 @media (min-aspect-ratio: 6/10) {
   #pfs_container {
     /* transform: translateY(-50%); */
@@ -172,6 +176,10 @@ a:visited {
   .code{
     max-width: 30vw;
     max-height: 50vh;
+  }
+
+  .code.full-width{
+    max-width: 40vw !important;
   }
 }
 /* this is for mobile 
