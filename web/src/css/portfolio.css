@@ -71,6 +71,28 @@
   padding-top: 2.5vh;
   padding-bottom: 2.5vh;
 }
+.ttb{
+  flex-direction: column;
+
+}
+p{
+  font-family: 'San Francisco Display';
+  font-size: 1.5vh;
+}
+.center-align {
+  text-align: center !important;
+}
+
+.no-top-margin {
+  margin-top: 0 !important;
+}
+.no-bottom-margin {
+  margin-bottom: 0 !important;
+}
+
+.half-bottom-margin{
+  margin-bottom: 2.5vh !important;
+}
 @media (min-aspect-ratio: 6/10) {
   #pfs_container {
     /* transform: translateY(-50%); */
