@@ -95,6 +95,10 @@ p {
 .code{
   text-align: left;
 }
+
+a:visited {
+  color: #dce706;
+}
 @media (min-aspect-ratio: 6/10) {
   #pfs_container {
     /* transform: translateY(-50%); */
@@ -377,6 +381,11 @@ p.left {
   height: 100%;
   width: 100%;
 }
+
+.main-img-box img{
+  max-height: 50vh;
+  max-width: 50v;
+} 
 
 object.main {
   max-height: 50vh;

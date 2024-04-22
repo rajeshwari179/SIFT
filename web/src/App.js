@@ -29,6 +29,8 @@ import structure from './images/gaussian.jpeg';
 import DoG from './images/DoG.png';
 import Gaussian from './images/Gaussian.png';
 import Resample from './images/Resample.png';
+import main_img from './images/Head.png';
+import LP from './images/LP.png';
 
 function useInterval(callback, delay) {
   const savedCallback = useRef();
@@ -168,7 +170,7 @@ function App() {
             type="image/svg+xml"
             alt="spiral logo"
           />
-          <p id="myname">The Stereo Squad</p>
+          <p id="myname">Let's OpenCudaV</p>
           <object
             data={mvl}
             id="mvl"
@@ -182,12 +184,13 @@ function App() {
               <div id="pfs_container" className="medium">
                 <p className="pfTitle">Idea</p>
                 <div className="main-img-box">
-                  <object
+                  {/* <object
                     data={main}
                     className="main"
                     type="image/svg+xml"
                     alt="spiral logo"
-                  />
+                  /> */}
+                  <img src={main_img} alt="CUDA+SIFT?" />
                 </div>
 
                 <div className="flex ttb full-width center">
@@ -274,6 +277,14 @@ function App() {
                   enhance the overall efficiency and productivity of video
                   analysis workflows.
                 </p>
+                <p className="pfContent width-control">
+                  <a
+                    href="https://github.gatech.edu/kshenoy8/stereosquad/"
+                    target="_blank"
+                  >
+                    See the GitHub Repository here!
+                  </a>
+                </p>
               </div>
             </div>
             <div id="pf_con_con">
@@ -321,8 +332,7 @@ function App() {
                   <div>
                     <p>
                       <span className="head">
-                        <span className="lime">2 </span> Gaussian Filtering for
-                        Image Blurring
+                        <span className="lime">2 </span> Gaussian Filtering and Separability
                       </span>
                     </p>
                     <p>
@@ -338,7 +348,7 @@ function App() {
                       reduces the computational load to just n + m
                       multiplications per pixel, making the Gaussian filter an
                       efficient choice for image blurring while maintaining
-                      quality. 
+                      quality.
                       {/* Smith et al. utilize HDR cameras mounted on a mobile robot
                       for stereo vision-based 3D reconstruction{' '}
                       <span className="lime">[1]</span>. Their method captures
@@ -628,83 +638,75 @@ end`}
                     <img src={Resample} alt="hello" />
                   </div>
                 </div>
-              </div>
-            </div>
-            {/* <div id="pf_con_con">
-              <div id="pfs_container">
-                <p className="pfTitle">Progress...</p>
-                <div className="flex column">
-                  <div className="flex">
-                    <object
-                      data={done}
-                      className="rightArrow status"
-                      type="image/svg+xml"
-                      alt="spiral logo"
-                    />
-                    <p className="no-wrap">Ideation</p>
+                <div className="row row-left">
+                  {' '}
+                  <div className="img img-left">
+                    <img src={LP} alt="hello" />
                   </div>
-                  <div className="flex">
-                    <object
-                      data={done}
-                      className="rightArrow status"
-                      type="image/svg+xml"
-                      alt="spiral logo"
-                    />
-                    <p className="no-wrap">Website Creation</p>
-                  </div>
-                  <div className="flex">
-                    <object
-                      data={done}
-                      className="rightArrow status"
-                      type="image/svg+xml"
-                      alt="spiral logo"
-                    />
-                    <p className="no-wrap">Implement Structure from Motion</p>
-                  </div>
-                  <div className="flex">
-                    <object
-                      data={pending}
-                      className="rightArrow status"
-                      type="image/svg+xml"
-                      alt="spiral logo"
-                    />
-                    <p className="left">
-                      Generate GT specific dataset, using a gimball and
-                      checkerboard patterns, at coda
+                  <div>
+                    <p>
+                      <span className="head">
+                        <span className="lime">5 </span> Large Parallelism
+                      </span>
                     </p>
-                  </div>
-                  <div className="flex">
-                    <object
-                      data={pending}
-                      className="rightArrow status"
-                      type="image/svg+xml"
-                      alt="spiral logo"
-                    />
-                    <p className="left">
-                      Goldberg Polyhedron Model for Vertices
+                    <p>
+                      In order to make our code more efficient, we utilized
+                      large parallelism to process multiple images/frames
+                      simultaneously. This approach allows us to take advantage
+                      of the high memory bandwidth of modern GPUs, significantly
+                      reducing the time required for image processing.
                     </p>
-                  </div>
-                  <div className="flex">
-                    <object
-                      data={pending}
-                      className="rightArrow status"
-                      type="image/svg+xml"
-                      alt="spiral logo"
-                    />
-                    <p className="left">Vertex Color Generation</p>
-                  </div>
-                  <div className="flex">
-                    <object
-                      data={pending}
-                      className="rightArrow status"
-                      type="image/svg+xml"
-                      alt="spiral logo"
-                    />
-                    <p className="left">Generate Stereo Video</p>
+                    <p>
+                      By processing 128 images at once, we were able to achieve
+                      optimal performance and enhance the speed of our SIFT
+                      algorithm. This also makes the code more scalable to
+                      handle hardware with higher memory bandwidths and
+                      processing capabilities in the future. Processing multiple
+                      images in parallel is a nice way to process a video
+                      because videos are essentially a series of images. This
+                      parallel processing capability is crucial for accelerating
+                      the feature extraction process and improving the
+                      efficiency of video analysis tasks.
+                    </p>
+                    <SyntaxHighlighter
+                      language="julia"
+                      style={tomorrowNightBright}
+                      showLineNumbers={true}
+                      wrapLines={true}
+                      className="code"
+                    >
+                      {`nImages = 128
+  img = []
+  imgWidth = 0
+  time_taken = 0
+  # load the images
+  for i in 1:nImages
+      img_temp = Float32.(Gray.(FileIO.load("assets/frame_$i.png")))
+      if i == 1
+          img = img_temp
+          imgWidth = size(img, 2)
+      else
+          img = cat(img, img_temp, dims=2)
+      end
+  end`}
+                    </SyntaxHighlighter>
+                    {/* Smith et al. utilize HDR cameras mounted on a mobile robot
+                      for stereo vision-based 3D reconstruction{' '}
+                      <span className="lime">[1]</span>. Their method captures
+                      textures and spatial features as 2D images and employs an
+                      algorithm for depth map visualization.
+                      <br />
+                      <br />
+                      OpenMVG is a library dedicated to Multiple-View Geometry
+                      and Structure-from-Motion tasks{' '}
+                      <span className="lime">[3]</span>. It facilitates
+                      identifying corresponding points between images and
+                      manipulating 3D geometry for various computer vision
+                      applications. */}
                   </div>
                 </div>
               </div>
-            </div> */}
+            </div>
             <div id="pf_con_con">
               <div id="pfs_container" className="short">
                 <p className="pfTitle">Experiment Setup</p>
