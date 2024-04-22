@@ -13,6 +13,7 @@
     "react-dom": "^17.0.2",
     "react-icons": "^4.3.1",
     "react-scripts": "5.0.0",
+    "react-syntax-highlighter": "^15.5.0",
     "reactcss": "^1.2.3",
     "web-vitals": "^2.1.2"
   },

@@ -95,7 +95,6 @@ function row_kernel(inp, conv, out, inpH::Int16, buffH::Int16, width::Int32, img
         #     @cuprintln("Size of inp: $(size(inp)), size of out: $(size(out)), size of data: $(size(data))")
         # end
 
-
         # convolution
         thisIsAComputationThread::Bool = thisY <= inpH + apron && apron < thisX <= width - apron && apron < threadIdx().y <= blockDim().y - apron
         # if thisY == 1073 && apron==6 && thisX > 3900
@@ -114,7 +113,6 @@ function row_kernel(inp, conv, out, inpH::Int16, buffH::Int16, width::Int32, img
         end
     end
     return
-
 end
 
 function resample_kernel(inp, out)

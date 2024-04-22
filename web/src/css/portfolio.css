@@ -92,6 +92,9 @@ p {
 .half-bottom-margin {
   margin-bottom: 2.5vh !important;
 }
+.code{
+  text-align: left;
+}
 @media (min-aspect-ratio: 6/10) {
   #pfs_container {
     /* transform: translateY(-50%); */
@@ -162,8 +165,13 @@ p {
     height: 30px;
     background-position: center center; */
   }
+  .code{
+    max-width: 30vw;
+    max-height: 50vh;
+  }
 }
-
+/* this is for mobile 
+ */
 @media (max-aspect-ratio: 6/10) {
   .portfolios {
     flex-direction: column;
@@ -391,3 +399,4 @@ object.main {
   color: #dce706;
   /* set visited color to the same */
 }
+
