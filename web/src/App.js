@@ -13,8 +13,6 @@ import done from './static/done.svg';
 import pending from './static/pending.svg';
 import main from './static/main img.svg';
 import { MathJaxContext, MathJax } from 'better-react-mathjax';
-import SyntaxHighlighter from 'react-syntax-highlighter';
-import { tomorrowNightBright } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import { useState, useEffect, useRef } from 'react';
 import {
   rgbToHslHsvHex,
@@ -132,7 +130,7 @@ function App() {
   };
 
   useInterval(perturbPos, 1);
-  // console.log(SyntaxHighlighter.supportedLanguages)
+
   useEffect(() => {
     perturbPos(true);
     setStartPerturbation(true);
@@ -287,6 +285,42 @@ function App() {
                 </p>
               </div>
             </div>
+
+            <div id="pf_con_con">
+              <div id="pfs_container" className="short">
+                <p className="pfTitle">Related Work</p>
+                <div className="row">
+                  <div>
+                    <p>
+                      <span className="head">
+                        {/* <span className="lime">1 </span>Structure from Motion */}
+                      </span>
+                    </p>
+                    <p>
+                      
+                    </p>
+                  </div>
+                </div>
+                <div className="row">
+                  <div>
+                    
+                    
+                   
+                  </div>
+                </div>
+                <div className="row">
+                  <div>
+                    <p>
+                     
+                    </p>
+                   
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
+
             <div id="pf_con_con">
               <div id="pfs_container" className="medium">
                 <p className="pfTitle">Approach</p>
@@ -348,7 +382,8 @@ function App() {
                       reduces the computational load to just n + m
                       multiplications per pixel, making the Gaussian filter an
                       efficient choice for image blurring while maintaining
-                      quality.
+                      quality. <br />
+                      <br />
                       {/* Smith et al. utilize HDR cameras mounted on a mobile robot
                       for stereo vision-based 3D reconstruction{' '}
                       <span className="lime">[1]</span>. Their method captures
@@ -363,101 +398,6 @@ function App() {
                       manipulating 3D geometry for various computer vision
                       applications. */}
                     </p>
-                    <SyntaxHighlighter
-                      language="julia"
-                      style={tomorrowNightBright}
-                      showLineNumbers={true}
-                      wrapLines={true}
-                      className="code"
-                    >
-                      {`function col_kernel_strips(inp, conv, buffer, width::Int32, height::Int16, apron::Int8)
-    # block number, column major, 0-indexed
-    blockNum::UInt32 = blockIdx().x - 1 + 
-                        (blockIdx().y - 1) * gridDim().x 
-    threadNum::UInt16 = threadIdx().x - 1
-    threads::Int16 = blockDim().x
-
-    # there could be more blocks than needed
-    thisX::Int32 = blockNum ÷ cld((height - 2 * apron), 
-                                (threads - 2 * apron)) + 1 # 1-indexed
-    thisY::Int16 = blockNum % cld((height - 2 * apron), 
-                                (threads - 2 * apron)) 
-                            * (threads - 2 * apron) + threadNum + 1 # 1-indexed
-    thisPX::Int32 = 0
-
-    data = CuDynamicSharedArray(Float32, threads)
-
-    # fill the shared memory
-    if thisY <= height && thisX <= width
-        thisPX = thisY + (thisX - 1) * height
-        data[threadNum+1] = inp[thisPX]
-    end
-    sync_threads()
-
-    # convolution
-    if apron < thisY <= height - apron && thisX <= width && apron <= threadNum < threads - apron
-        sum::Float32 = 0.0
-        for i in -apron:apron
-            sum += data[threadNum+1+i] * conv[apron+1+i]
-        end
-        buffer[thisY, thisX] = sum
-    end
-    return
-end
-
-# buffH is the height of the buffer including the black apron at the bottom
-# inpH is the height of the image excluding the aprons, after the column kernel
-function row_kernel(inp, conv, out, inpH::Int16, buffH::Int16, width::Int32, imgWidth::Int16, apron::Int8)
-    # block number, column major, 0-indexed
-    blockNum::UInt32 = blockIdx().x - 1 
-                        + (blockIdx().y - 1) 
-                        * gridDim().x 
-    threadNum::UInt16 = threadIdx().x - 1 
-                        + (threadIdx().y - 1) 
-                        * blockDim().x
-    threads::Int16 = blockDim().x * blockDim().y
-
-    if threads <= width
-
-        blocksInACol::Int8 = cld(inpH, blockDim().x)
-        blocksInARow::Int16 = cld(imgWidth - 2 * apron, blockDim().y - 2 * apron)
-        blocksInAnImage::Int16 = blocksInACol * blocksInARow
-
-        thisX::Int32 = (blockNum ÷ blocksInAnImage) * imgWidth + ((blockNum % blocksInAnImage) % blocksInARow) * (blockDim().y - 2 * apron) + threadIdx().y # 1-indexed
-        thisY::Int16 = ((blockNum % blocksInAnImage) ÷ blocksInARow) * blockDim().x + threadIdx().x + apron # 1-indexed
-
-        data = CuDynamicSharedArray(Float32, (blockDim().x, blockDim().y))
-
-        # fill the shared memory
-        thisPX::Int32 = thisY + (thisX - 1) * buffH
-        if thisX <= width && thisY <= inpH + apron
-            data[threadNum+1] = inp[thisPX]
-        end
-        sync_threads()
-
-        # convolution
-        thisIsAComputationThread::Bool = 
-                  thisY <= inpH + apron 
-                    && apron < thisX <= width - apron 
-                    && apron < threadIdx().y <= blockDim().y - apron
-
-        if (blockNum % blocksInAnImage) % blocksInARow == blocksInARow - 1
-            thisIsAComputationThread = 
-                    thisIsAComputationThread 
-                  && (thisX - (blockNum ÷ blocksInAnImage) * imgWidth <= imgWidth - 2 * apron)
-        end
-        if thisIsAComputationThread
-            sum::Float32 = 0.0
-            for i in -apron:apron
-                sum += data[threadNum+1+i*blockDim().x] * conv[apron+1+i]
-            end
-            # out[thisY, thisX-apron-fld(blockNum, blocksInAnImage)*2*apron] = sum
-            out[thisY, thisX] = sum
-        end
-    end
-    return
-end`}
-                    </SyntaxHighlighter>
                   </div>
                   <div className="img img-right">
                     <img src={Gaussian} alt="hello" />
@@ -531,18 +471,6 @@ end`}
                       </MathJax>{' '}
                       while significantly reducing computational overhead.
                     </p>
-                    <SyntaxHighlighter
-                      language="julia"
-                      style={tomorrowNightBright}
-                      showLineNumbers={true}
-                      wrapLines={true}
-                      className="code"
-                    >
-                      {`for i in 1:(layers-1)
-    out_gpus[j][i] = out_gpus[j][i+1] .- out_gpus[j][i]
-    out_gpus[j][i] = out_gpus[j][i] .* (out_gpus[j][i] .> 0.0)
-end`}
-                    </SyntaxHighlighter>
                   </div>
                 </div>
 
@@ -583,44 +511,7 @@ end`}
                       ensuring the algorithm is robust across different scales.{' '}
                       <br />
                       <br />
-                    </p>
-                    <SyntaxHighlighter
-                      language="julia"
-                      style={tomorrowNightBright}
-                      showLineNumbers={true}
-                      wrapLines={true}
-                      className="code"
-                    >
-                      {`function resample_kernel(inp, out)
-    blockNum::UInt32 = blockIdx().x - 1 + (blockIdx().y - 1) * gridDim().x 
-    # block number, column major, 0-indexed
-    threadNum::UInt16 = threadIdx().x - 1
-    threads::Int16 = blockDim().x
-
-    data = CuDynamicSharedArray(Float32, threads)
-
-    h, w = size(inp)
-    outPX::Int32 = blockNum * threads + threadNum + 1
-    outX::Int32 = (outPX - 1) ÷ (h ÷ 2) # 0-indexed
-    outY::Int16 = (outPX - 1) % (h ÷ 2) # 0-indexed
-
-    thisX::Int32 = 2 * outX # 0-indexed
-    thisY::Int16 = 2 * outY # 0-indexed
-    thisPX::Int32 = thisY + thisX * h + 1
-
-    # fill the shared memory
-    if thisPX <= h * w
-        data[threadNum+1] = inp[thisPX]
-    end
-    sync_threads()
-
-    if outPX <= (h * w) ÷ 4
-        out[outPX] = data[threadNum+1]
-    end
-    return
-end`}
-                    </SyntaxHighlighter>
-                    {/* Smith et al. utilize HDR cameras mounted on a mobile robot
+                      {/* Smith et al. utilize HDR cameras mounted on a mobile robot
                       for stereo vision-based 3D reconstruction{' '}
                       <span className="lime">[1]</span>. Their method captures
                       textures and spatial features as 2D images and employs an
@@ -633,6 +524,7 @@ end`}
                       identifying corresponding points between images and
                       manipulating 3D geometry for various computer vision
                       applications. */}
+                    </p>
                   </div>
                   <div className="img img-right">
                     <img src={Resample} alt="hello" />
