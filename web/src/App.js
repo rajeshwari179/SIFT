@@ -21,10 +21,12 @@ import {
   getColourPoints,
 } from './js/colorFunctions';
 
-import epipolar from './images/dataset.jpeg';
+import CODA from './images/dataset.jpeg';
 import structure from './images/gaussian.jpeg';
 // import goldberg from './images/octave.jpeg';
 import DoG from './images/DoG.png';
+import Gaussian from './images/Gaussian.png';
+import Resample from './images/Resample.png';
 
 function useInterval(callback, delay) {
   const savedCallback = useRef();
@@ -277,7 +279,7 @@ function App() {
                 <p className="pfTitle">Approach</p>
                 <div className="row row-left">
                   <div className="img img-left">
-                    <img src={epipolar} alt="hello" />
+                    <img src={CODA} alt="hello" />
                   </div>
                   <div>
                     <p>
@@ -317,7 +319,8 @@ function App() {
                   <div>
                     <p>
                       <span className="head">
-                        <span className="lime">2 </span> Gaussian Filtering for Image Blurring
+                        <span className="lime">2 </span> Gaussian Filtering for
+                        Image Blurring
                       </span>
                     </p>
                     <p>
@@ -351,7 +354,7 @@ function App() {
                     </p>
                   </div>
                   <div className="img img-right">
-                    <img src={structure} alt="hello" />
+                    <img src={Gaussian} alt="hello" />
                   </div>
                 </div>
                 <div className="row row-left">
@@ -369,14 +372,27 @@ function App() {
                       The Difference of Gaussian (DoG) method is employed to
                       effectively identify stable keypoint locations within the
                       scale space of an image. This is achieved by convolving
-                      the image with the difference-of-Gaussian function, D(x,
-                      y, σ) which is derived from the difference between two
+                      the image with the difference-of-Gaussian function,{' '}
+                      <MathJax className="math" inline={true}>
+                        {'\\(\\text{D}(x, y, σ)\\)'}
+                      </MathJax>{' '}
+                      which is derived from the difference between two
                       neighboring scales separated by a constant multiplicative
-                      factor k.One of the primary advantages of using this
-                      function is its computational efficiency. As the smoothed
-                      images L are already computed for scale space feature
-                      description, D can be easily obtained through
-                      straightforward image subtraction.
+                      factor{' '}
+                      <MathJax className="math" inline={true}>
+                        {'\\(k\\)'}
+                      </MathJax>
+                      . One of the primary advantages of using this function is
+                      its computational efficiency. As the smoothed images{' '}
+                      <MathJax className="math" inline={true}>
+                        {'\\(L\\)'}
+                      </MathJax>{' '}
+                      are already computed for scale space feature description,{' '}
+                      <MathJax className="math" inline={true}>
+                        {'\\(D\\)'}
+                      </MathJax>{' '}
+                      can be easily obtained through straightforward image
+                      subtraction.
                       <br />
                       <br />
                       Moreover, the DoG function closely approximates the
@@ -385,40 +401,69 @@ function App() {
                       Gaussians to generate images at different scales, spaced
                       by a constant factor k n scale space. For efficient octave
                       processing, each octave is divided into s intervals,
-                      setting k = 2^(1/s) To cover a complete octave during
-                      extrema detection, we produce s+3 images in the blurred
-                      image stack for each octave. The DoG images, resulting
-                      from subtracting adjacent scales, are shown on the left.
-                      After processing a full octave, the Gaussian image with
-                      double the initial σ value is resampled by selecting every
-                      second pixel in each row and column. This resampling
-                      maintains accuracy relative to σ while significantly
-                      reducing computational overhead.
+                      setting,{' '}
+                      <MathJax className="math">
+                        {'$$k = 2^{1/s}.$$'}
+                      </MathJax>{' '}
+                      To cover a complete octave during extrema detection, we
+                      produce{' '}
+                      <MathJax className="math" inline={true}>
+                        {'\\((s+3)\\)'}
+                      </MathJax>{' '}
+                      images in the blurred image stack for each octave. The DoG
+                      images, resulting from subtracting adjacent scales, are
+                      shown on the left. After processing a full octave, the
+                      Gaussian image with double the initial{' '}
+                      <MathJax className="math" inline={true}>
+                        {'\\(\\sigma\\)'}
+                      </MathJax>{' '}
+                      value is resampled by selecting every second pixel in each
+                      row and column. This resampling maintains accuracy
+                      relative to{' '}
+                      <MathJax className="math" inline={true}>
+                        {'\\(\\sigma\\)'}
+                      </MathJax>{' '}
+                      while significantly reducing computational overhead.
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="row row-right">
                   <div>
                     <p>
                       <span className="head">
-                        <span className="lime">4 </span> Resampling
+                        <span className="lime">4 </span> Resampling for Octaves
                       </span>
                     </p>
                     <p>
-                      In our project, we utilized a Gaussian filter for image
-                      blurring due to its separable nature, which offers
-                      computational advantages. Traditional 2D convolution
-                      filters require nxm multiplications for each pixel, where
-                      n and m are the dimensions of the kernel. In contrast,
-                      separable filters can be split into two one-dimensional
-                      filters applied sequentially along rows and columns. By
-                      taking advantage of this property, we divided the blurring
-                      process into horizontal and vertical stages. This method
-                      reduces the computational load to just n + m
-                      multiplications per pixel, making the Gaussian filter an
-                      efficient choice for image blurring while maintaining
-                      quality. <br />
+                      We resample between each octave to create a series of
+                      images with different scales. This is done to detect
+                      features at different levels of detail, making the
+                      algorithm invariant to scale changes in the image.
+                    </p>
+                    <p>
+                      The image with{' '}
+                      <MathJax className="math" inline={true}>
+                        {'\\(2\\times\\)'}
+                      </MathJax>{' '}
+                      the base{' '}
+                      <MathJax className="math" inline={true}>
+                        {'\\(\\sigma\\)'}
+                      </MathJax>{' '}
+                      is used as the source to resample because it ensures that
+                      the keypoint detection is efficient and robust. This
+                      choice allows SIFT to detect a wide range of features at
+                      different scales while minimizing computational
+                      complexity. The{' '}
+                      <MathJax className="math" inline={true}>
+                        {'\\(2\\times\\)'}
+                      </MathJax>
+                      <MathJax className="math" inline={true}>
+                        {'\\(\\sigma\\)'}
+                      </MathJax>{' '}
+                      image helps capture both finer and coarser details,
+                      ensuring the algorithm is robust across different scales.{' '}
+                      <br />
                       <br />
                       {/* Smith et al. utilize HDR cameras mounted on a mobile robot
                       for stereo vision-based 3D reconstruction{' '}
@@ -436,7 +481,7 @@ function App() {
                     </p>
                   </div>
                   <div className="img img-right">
-                    <img src={structure} alt="hello" />
+                    <img src={Resample} alt="hello" />
                   </div>
                 </div>
               </div>
