@@ -789,7 +789,7 @@ end`}
     return time_taken
 end`}
                     </SyntaxHighlighter>
-                    <p>Occupance API is used like so.</p>
+                    <p>Occupancy API is used like so.</p>
                     <SyntaxHighlighter
                       language="julia"
                       style={tomorrowNightBright}
@@ -802,7 +802,9 @@ println(launch_configuration(kernel.fun))
 kernel = @cuda name = "row" launch = false row_kernel(buffer, conv_gpus[i], out_gpus[j][i], Int16(height - 2 * aprons[i]), Int16(height), Int32(width), Int16(imgWidth), Int8(aprons[i]))
 println(launch_configuration(kernel.fun))`}
                     </SyntaxHighlighter>
-                    <p>And finally, the grids are made nearly square like so.</p>
+                    <p>
+                      And finally, the grids are made nearly square like so.
+                    </p>
                     <SyntaxHighlighter
                       language="julia"
                       style={tomorrowNightBright}
@@ -862,16 +864,15 @@ end`}
                       In our code, we implemented the Gaussian kernel such that
                       the outermost un-normalized value is 0.1725.
                       <MathJax className="math" inline={true}>
-                        {
-                          '$$\\epsilon=0.1725\\le e^{-X^2/(2\\sigma^2)}$$'
-                        }
-                      </MathJax> <MathJax className="math" inline={true}>
+                        {'$$\\epsilon=0.1725\\le e^{-X^2/(2\\sigma^2)}$$'}
+                      </MathJax>{' '}
+                      <MathJax className="math" inline={true}>
                         {
                           '$$\\Rightarrow \\text{apron}=\\sigma \\cdot \\sqrt{2\\ \\text{ln} (1/\\epsilon)} $$'
                         }
                       </MathJax>
                       This ensures that the kernel is normalized and that the
-                      values beyond a certain point are negligible. 
+                      values beyond a certain point are negligible.
                     </p>
                     <SyntaxHighlighter
                       language="julia"
