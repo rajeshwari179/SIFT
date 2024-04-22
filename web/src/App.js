@@ -31,6 +31,7 @@ import Gaussian from './images/Gaussian.png';
 import Resample from './images/Resample.png';
 import main_img from './images/Head.png';
 import LP from './images/LP.png';
+import GaussianKernel from './images/GaussianKernel.png';
 
 function useInterval(callback, delay) {
   const savedCallback = useRef();
@@ -268,7 +269,6 @@ function App() {
               </div>
             </div>
 
-
             <div id="pf_con_con">
               <div id="pfs_container" className="short">
                 <p className="pfTitle">Related Work</p>
@@ -299,17 +299,21 @@ function App() {
                   <div>
                     <p>
                       <span className="head">
-                        <span className="lime">1</span> Flexible Thread-Block Configuration
+                        <span className="lime">1</span> Flexible Thread-Block
+                        Configuration
                       </span>
                     </p>
                     <p>
-                      
-                    In our research, we address a key limitation identified in [2] where existing methods required the number of threads 
-                    to be a direct multiple of the image size, leading to suboptimal resource utilization. Our approach introduces a 
-                    more flexible thread-block configuration, enabling improved performance across diverse image sizes and resolutions. 
-                    By deviating from rigid thread-image size alignments, our method enhances resource efficiency and scalability in parallel 
-                    image processing tasks compared to prior techniques highlighted in [2].
-
+                      In our research, we address a key limitation identified in
+                      [2] where existing methods required the number of threads
+                      to be a direct multiple of the image size, leading to
+                      suboptimal resource utilization. Our approach introduces a
+                      more flexible thread-block configuration, enabling
+                      improved performance across diverse image sizes and
+                      resolutions. By deviating from rigid thread-image size
+                      alignments, our method enhances resource efficiency and
+                      scalability in parallel image processing tasks compared to
+                      prior techniques highlighted in [2].
                     </p>
                   </div>
                 </div>
@@ -322,14 +326,17 @@ function App() {
                       </span>
                     </p>
                     <p>
-                      
-                    Our approach improves upon the SIFT algorithm implementation discussed in [3] by implementing all 
-                    stages of the algorithm exclusively on the GPU, eliminating the need for data transfer between the GPU and CPU. 
-                    This optimization minimizes overhead and fully harnesses GPU acceleration, leading to significant performance 
-                    enhancements. Unlike the approach detailed in [3], our method maximizes efficiency by leveraging the GPU's processing 
-                    power throughout the entire SIFT computation, resulting in improved speed and scalability for image feature extraction 
-                    tasks.
-
+                      Our approach improves upon the SIFT algorithm
+                      implementation discussed in [3] by implementing all stages
+                      of the algorithm exclusively on the GPU, eliminating the
+                      need for data transfer between the GPU and CPU. This
+                      optimization minimizes overhead and fully harnesses GPU
+                      acceleration, leading to significant performance
+                      enhancements. Unlike the approach detailed in [3], our
+                      method maximizes efficiency by leveraging the GPU's
+                      processing power throughout the entire SIFT computation,
+                      resulting in improved speed and scalability for image
+                      feature extraction tasks.
                     </p>
                   </div>
                 </div>
@@ -342,23 +349,21 @@ function App() {
                       </span>
                     </p>
                     <p>
-                      
-                    In contrast to previous convolutional approaches discussed in [4], which did not 
-                    leverage memory bandwidth for efficiency gains, our work focuses on optimizing memory 
-                    access patterns, specifically through techniques like filter coalescing. This optimization 
-                    strategy targets the enhanced shared memory bandwidth available in modern GPU architectures, 
-                    leading to more efficient memory utilization. By improving memory access efficiency, our approach 
-                    contributes significantly to overall performance enhancements in convolutional neural network computations, 
-
+                      In contrast to previous convolutional approaches discussed
+                      in [4], which did not leverage memory bandwidth for
+                      efficiency gains, our work focuses on optimizing memory
+                      access patterns, specifically through techniques like
+                      filter coalescing. This optimization strategy targets the
+                      enhanced shared memory bandwidth available in modern GPU
+                      architectures, leading to more efficient memory
+                      utilization. By improving memory access efficiency, our
+                      approach contributes significantly to overall performance
+                      enhancements in convolutional neural network computations,
                     </p>
                   </div>
                 </div>
-                
               </div>
             </div>
-
-
-
 
             <div id="pf_con_con">
               <div id="pfs_container" className="medium">
@@ -961,31 +966,6 @@ apron = ceil(Int, sigma * sqrt(-2 * log(epsilon)))`}
                 </div>
                 <div className="row">
                   <div>
-                    <p>
-                      <span className="head">
-                        {/* <span className="lime">1 </span>Structure from Motion */}
-                      </span>
-                    </p>
-                    <p>
-                      In our experiments, we generated a dataset comprising 1980
-                      frames extracted from a 66-second video. To efficiently
-                      apply convolution with Gaussian blurring in both vertical
-                      and horizontal directions, we processed 128 images
-                      simultaneously, arranged in a row. This approach was
-                      designed to harness the high DRAM availability of modern
-                      GPUs. Specifically, we utilized an NVIDIA H100 80GB HBM3
-                      GPU from the Georgia Tech's PACE cluster. With CUDA
-                      Version 12.2 and Julia 1.9.2, we leveraged the parallel
-                      processing capabilities of our GPU to achieve optimal
-                      performance.
-                    </p>
-                  </div>
-                </div>
-                {/* <div className="row">
-                  <div></div>
-                </div> */}
-                <div className="row">
-                  <div>
                     <p></p>
                   </div>
                 </div>
@@ -1003,16 +983,19 @@ apron = ceil(Int, sigma * sqrt(-2 * log(epsilon)))`}
                       </span>
                     </p>
                     <p>
-                    Our primary metric for evaluating the success of our GPU-accelerated SIFT feature extraction approach is the 
-                    time required to process each frame of the video. Specifically, we aim to achieve a significant reduction in 
-                    processing time compared to traditional methods or serial implementations. 
+                      Our primary metric for evaluating the success of our
+                      GPU-accelerated SIFT feature extraction approach is the
+                      time required to process each frame of the video.
+                      Specifically, we aim to achieve a significant reduction in
+                      processing time compared to traditional methods or serial
+                      implementations.
                     </p>
                     <p>
-
-            Our key result demonstrates the successful parallelization of each stage of the SIFT 
-            (Scale-Invariant Feature Transform) algorithm, including processing up to the octaves, on our optimized GPU implementation. 
-            
-                 </p>
+                      Our key result demonstrates the successful parallelization
+                      of each stage of the SIFT (Scale-Invariant Feature
+                      Transform) algorithm, including processing up to the
+                      octaves, on our optimized GPU implementation.
+                    </p>
                   </div>
                 </div>
 
@@ -1024,26 +1007,87 @@ apron = ceil(Int, sigma * sqrt(-2 * log(epsilon)))`}
                       </span>
                     </p>
                     <p>
-                    By adjusting the number of octaves and visualizing the impact of octave size, we 
-                    optimized the SIFT algorithm's ability to detect features across various scales 
-                    efficiently. This fine-tuning contributed to enhanced feature detection and robustness 
-                    in diverse image datasets.We achieved a processing time of 0.00189 seconds for analyzing 64 images concurrently, 
-            with each image containing 5 layers and 3 octaves. 
+                      By adjusting the number of octaves and visualizing the
+                      impact of octave size, we optimized the SIFT algorithm's
+                      ability to detect features across various scales
+                      efficiently. This fine-tuning contributed to enhanced
+                      feature detection and robustness in diverse image
+                      datasets.We achieved a processing time of 0.00189 seconds
+                      for analyzing 64 images concurrently, with each image
+                      containing 5 layers and 3 octaves.
                     </p>
+                    <img
+                      src={GaussianKernel}
+                      alt="Output of Gaussian Kernels"
+                      className='short'
+                    />
                   </div>
                 </div>
                 <div className="row">
                   <div>
                     <p>
                       <span className="head">
-                        <span className="lime"> </span> Effective Octave Size Management
+                        <span className="lime"> </span> Effective Octave Size
+                        Management
                       </span>
                     </p>
                     <p>
-                    Our optimized GPU implementation significantly outperforms the optimized serial implementation using the scipy library for applying the Gaussian filter per frame. Specifically, our GPU-accelerated approach achieves a processing time of 0.00694 seconds per frame, whereas the scipy serial implementation takes approximately 0.03 seconds per frame.
-
-This substantial reduction in processing time highlights the efficiency and speed gains obtained through GPU parallelism. By leveraging the GPU's computational power and optimized memory access patterns, we expedite the Gaussian filtering process, crucial for pre-processing tasks in image analysis.
+                      Our optimized GPU implementation significantly outperforms
+                      the optimized serial implementation using the scipy
+                      library for applying the Gaussian filter per frame.
+                      Specifically, our GPU-accelerated approach achieves a
+                      processing time of 0.00694 seconds per frame, whereas the
+                      scipy serial implementation takes approximately 0.03
+                      seconds per frame. This substantial reduction in
+                      processing time highlights the efficiency and speed gains
+                      obtained through GPU parallelism. By leveraging the GPU's
+                      computational power and optimized memory access patterns,
+                      we expedite the Gaussian filtering process, crucial for
+                      pre-processing tasks in image analysis.
                     </p>
+                    
+                    <SyntaxHighlighter
+                      language="shell"
+                      style={tomorrowNightBright}
+                      wrapLines={true}
+                      className="code medium long"
+                    >
+                      {`julia> include("convolve.jl")
+Here we go!
+(1080, 1920)
+Warmup done!
+Time taken: 0.00345s for 5 layers and 3 octaves per image @ 1 images at a time
+
+julia> include("convolve.jl")
+Here we go!
+(1080, 7680)
+Warmup done!
+Time taken: 0.00199s for 5 layers and 3 octaves per image @ 4 images at a time
+
+julia> include("convolve.jl")
+Here we go!
+(1080, 23040)
+Warmup done!
+Time taken: 0.00193s for 5 layers and 3 octaves per image @ 12 images at a time
+
+julia> include("convolve.jl")
+Here we go!
+(1080, 61440)
+Warmup done!
+Time taken: 0.00201s for 5 layers and 3 octaves per image @ 32 images at a time
+
+julia> include("convolve.jl")
+Here we go!
+(1080, 122880)
+Warmup done!
+Time taken: 0.00187s for 5 layers and 3 octaves per image @ 64 images at a time
+
+julia> include("convolve.jl")
+Here we go!
+(1080, 245760)
+Warmup done!
+Time taken: 0.00175s for 5 layers and 3 octaves per image @ 128 images at a time`}
+                    </SyntaxHighlighter>
                   </div>
                 </div>
               </div>
