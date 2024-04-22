@@ -21,9 +21,9 @@ import {
   getColourPoints,
 } from './js/colorFunctions';
 
-import epipolar from './images/epipolar geometry.png';
-import structure from './images/structure from motion.png';
-import goldberg from './images/Goldberg.png';
+import epipolar from './images/dataset.jpeg';
+import structure from './images/gaussian.jpeg';
+import goldberg from './images/octave.jpeg';
 
 function useInterval(callback, delay) {
   const savedCallback = useRef();
@@ -147,7 +147,7 @@ function App() {
             </div>
           </div>
           <div className="bg_c_c">
-            <div id="bg_Container_2" className="bg_Container">
+            0<div id="bg_Container_2" className="bg_Container">
               <object
                 data={bgShapes2}
                 id="bgShapes_2"
@@ -185,15 +185,17 @@ function App() {
                 </div>
 
                 <div className="flex ltr full-width center">
-                  <div className="flex concept">
+                  <h2 className="pfTitle">FAST SIFT</h2>
+                  {/* <div className="flex concept">
                     <p className="pfContent pad">Single video</p>
-                  </div>
-                  <object
+                  </div> */}
+                  {/* <object
                     data={right}
                     className="rightArrow"
                     type="image/svg+xml"
                     alt="spiral logo"
-                  />
+                  /> */}
+
                   {/* <div className="flex concept">
                     <p className="pfContent pad">Structure from Motion</p>
                     </div>
@@ -203,24 +205,41 @@ function App() {
                     type="image/svg+xml"
                     alt="spiral logo"
                   /> */}
-                  <div className="flex concept">
+                  {/* <div className="flex concept">
                     <p className="pfContent pad">Stereo Pair</p>
+                  </div> */}
+                </div>
+                <div id="introduction_section" className="medium">
+                  <p className="pfTitle">Introduction</p>
+                  <div className="row">
+                    <div>
+                      <p>
+                        <span className="head">
+
+                        </span>
+                      </p>
+                      <p>
+                        {/* Your introduction content goes here */}
+                      </p>
+                    </div>
                   </div>
                 </div>
                 <p className="pfContent width-control">
-                  Generate a stereo pair of a given video from the video? Videos
-                  are essentially frames of images with camera at different 3D
-                  positions. Reconstructing a 3D model of the world would allow
-                  for the generation the stereo pair of the input video.
-                  Although it won't be perfect, we predict that we can use a
-                  GenAI to filter and smoothen the output, but is beyond the
-                  scope of this project.
-                </p>
+                  {/* Paragraph 1 */}
+                  Our project focuses on accelerating the Scale-Invariant Feature Transform (SIFT) feature extraction process, a widely-used methodology for identifying interest points in images and videos. We aim to reduce the time required for this task by parallelizing various stages of the SIFT algorithm using CUDA-enabled GPUs. This approach substantially boosts the efficiency of video analysis, making it faster and more scalable compared to traditional methods.
+                  </p>
+                  <p className="pfContent width-control">
+                  The motivation for our project arises from the growing demand for efficient video analysis across industries such as surveillance, entertainment, and healthcare. Our GPU-accelerated solution addresses this need by delivering significant efficiency gains, leading to cost savings and improved productivity for organizations that rely on video analysis for decision-making, monitoring, or research purposes.
+                  </p>
+                  {/* Paragraph 3 */}
+                  <p className="pfContent width-control">For our system, the expected input is a video file, and the output consists of the coordinates or descriptors of the interest points detected in each frame. Specifically, our system will generate a list of interest points along with their corresponding features for each frame. This output facilitates further analysis, object recognition, or tracking tasks, enabling researchers, analysts, and professionals to extract valuable insights from videos more efficiently. By improving the speed and accuracy of video analysis, we aim to enhance the overall efficiency and productivity of video analysis workflows.
+                  </p>
+
               </div>
             </div>
             <div id="pf_con_con">
               <div id="pfs_container" className="medium">
-                <p className="pfTitle">Math + Engineering</p>
+                <p className="pfTitle">DATASET</p>
                 <div className="row row-left">
                   <div className="img img-left">
                     <img src={epipolar} alt="hello" />
@@ -228,19 +247,28 @@ function App() {
                   <div>
                     <p>
                       <span className="head">
-                        <span className="lime">1 </span>Epipolar Geometry
+                        <span className="lime">1 </span> Capturing Videos for Dataset Creation
                       </span>
                     </p>
                     <p>
                       {' '}
-                      Epipolar geometry is fundamental to our project’s goal of
+                      {/* Epipolar geometry is fundamental to our project’s goal of
                       generating stereoscopic views from single-camera videos.
                       It involves understanding the geometric relationship
                       between multiple views of the same scene, which is crucial
                       for 3D reconstruction. Using epipolar geometry, we can
                       determine corresponding points between frames, aiding in
                       the estimation of depth and facilitating the creation of a
-                      stereoscopic effect.
+                      stereoscopic effect. */}
+                      We curated our own dataset for the  project, focusing on the Coda building.
+                      To maintain clarity and sharpness across the frames of the video, we used a
+                      gimbal during recording. This ensured minimal blurring and stable footage throughout,
+                      enhancing the quality of the video dataset. For accurate camera calibration, we use
+                      various checkerboard patterns. These patterns serve as a calibration tool due to
+                      their well-defined geometry and known dimensions. The known properties of the checkerboard
+                      patterns provides a ground truth reference helping  in the precise estimation of camera parameters.
+                      To diversify our calibration dataset and avoid symmetrical patterns that could potentially skew the
+                      calibration results, we designed custom 3x3 grids.
                     </p>
                   </div>
                 </div>
@@ -248,20 +276,23 @@ function App() {
                   <div>
                     <p>
                       <span className="head">
-                        <span className="lime">2 </span>Structure From Motion
+                        <span className="lime">2 </span> GAUSSIAN FILTERING
                       </span>
                     </p>
                     <p>
-                      SfM is a critical component of our approach to 3D
-                      reconstruction from motion video. It allows us to extract
-                      three-dimensional structure from two-dimensional image
-                      sequences, which is essential for our non-learning-based
-                      3D reconstruction method. Utilizing SfM, we can
-                      reconstruct scene geometry and camera poses, enabling us
-                      to generate a stereoscopic view without the need for a
-                      stereo-camera setup <br />
+                      In our project, we utilized a Gaussian filter for image blurring
+                      due to its separable nature, which offers computational advantages.
+                      Traditional 2D convolution filters require nxm
+                      multiplications for each pixel, where n and m are
+                      the dimensions of the kernel. In contrast, separable filters can
+                      be split into two one-dimensional filters applied sequentially along
+                      rows and columns. By taking advantage of this property, we divided the
+                      blurring process into horizontal and vertical stages. This method reduces
+                      the computational load to just n + m  multiplications per pixel,
+                      making the Gaussian filter an efficient choice for image blurring while
+                      maintaining quality. <br />
                       <br />
-                      Smith et al. utilize HDR cameras mounted on a mobile robot
+                      {/* Smith et al. utilize HDR cameras mounted on a mobile robot
                       for stereo vision-based 3D reconstruction{' '}
                       <span className="lime">[1]</span>. Their method captures
                       textures and spatial features as 2D images and employs an
@@ -273,7 +304,7 @@ function App() {
                       <span className="lime">[3]</span>. It facilitates
                       identifying corresponding points between images and
                       manipulating 3D geometry for various computer vision
-                      applications.
+                      applications. */}
                     </p>
                   </div>
                   <div className="img img-right">
@@ -288,33 +319,24 @@ function App() {
                     <p>
                       <span className="head">
                         <span className="lime">3 </span>
-                        Vertex Colors and Angle-Based Binning
+                        Difference of Gaussian (DoG)
                       </span>
                     </p>
                     <p>
-                      Our approach for coloring vertices takes into account the
-                      viewing angle. Instead of a single fixed color, we divide
-                      the full 360-degree range around each vertex into
-                      equal-sized bins. These bins form a Goldberg polynomial
-                      shape. For each vertex, we assign different colors to
-                      these bins. During stereo image generation, our algorithm
-                      looks up the color based on the viewing angle bin. This
-                      technique ensures that our 3D scenes have realistic color
-                      variations, enhancing the overall visual experience.
+                      The Difference of Gaussian (DoG) method is employed to effectively identify stable keypoint locations within the scale space of an image. This is achieved by convolving the image with the difference-of-Gaussian function, D(x, y, σ) which is derived from the difference between two neighboring scales separated by a constant multiplicative factor k.One of the primary advantages of using this function is its computational efficiency. As the smoothed images
+                      L are already computed for scale space feature description, D can be easily obtained through straightforward image subtraction.
                       <br />
                       <br />
-                      Jones et al. propose a model for generating stereo images
-                      from a single image considering translation and rotation
-                      of objects <span className="lime">[2]</span>. Their
-                      approach extends the appearance flow network, introducing
-                      a reference image to enhance inpainting and improve image
-                      quality.
+                      Moreover, the DoG function closely approximates the scale-normalized Laplacian of Gaussian. In practice, the initial image undergoes incremental convolution with Gaussians to generate images at different scales, spaced by a constant factor k
+                      n scale space. For efficient octave processing, each octave is divided into s intervals, setting k = 2^(1/s) To cover a complete octave during extrema detection, we produce s+3
+                      images in the blurred image stack for each octave. The DoG images, resulting from subtracting adjacent scales, are shown on the left. After processing a full octave, the Gaussian image with double the initial σ value is resampled by selecting every second pixel in each row and column. This resampling maintains accuracy relative to
+                      σ while significantly reducing computational overhead.
                     </p>
                   </div>
                 </div>
               </div>
             </div>
-            <div id="pf_con_con">
+            {/* <div id="pf_con_con">
               <div id="pfs_container">
                 <p className="pfTitle">Progress...</p>
                 <div className="flex column">
@@ -388,7 +410,7 @@ function App() {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
             <div id="pf_con_con">
               <div id="pfs_container" className="short">
                 <p className="pfTitle">Experiments</p>
@@ -396,18 +418,11 @@ function App() {
                   <div>
                     <p>
                       <span className="head">
-                        <span className="lime">1 </span>Structure from Motion
+                        {/* <span className="lime">1 </span>Structure from Motion */}
                       </span>
                     </p>
                     <p>
-                      We tried to create a 3D plot of points of a video using 10
-                      frames. The points were extracted using the SIFT
-                      algorithm. The 3D plot was created using an SfM algorithm
-                      that we found online. The plot was not very accurate, but
-                      it was a good start. The next step is to improve the
-                      accuracy of the 3D plot, change the algorithm so that it
-                      certainly uses the checkerboard pattern we placed in
-                      world.
+                      In our experiments, we generated a dataset comprising 1980 frames extracted from a 66-second video. To efficiently apply convolution with Gaussian blurring in both vertical and horizontal directions, we processed 128 images simultaneously, arranged in a row. This approach was designed to harness the high DRAM availability of modern GPUs. Specifically, we utilized an NVIDIA H100 80GB HBM3 GPU from the Georgia Tech's PACE cluster. With CUDA Version 12.2 and Julia 1.9.2, we leveraged the parallel processing capabilities of our GPU to achieve optimal performance.
                     </p>
                   </div>
                 </div>
