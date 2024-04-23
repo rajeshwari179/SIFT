@@ -280,7 +280,6 @@ function App() {
                         {/* <span className="lime">1 </span>Structure from Motion */}
                       </span>
                     </p>
-                   
                   </div>
                 </div>
 
@@ -293,7 +292,7 @@ function App() {
                       </span>
                     </p>
                     <p>
-                      In our research, we address a key limitation identified in {' '}
+                      In our research, we address a key limitation identified in{' '}
                       [<span className="lime">2</span>] where existing methods
                       required the number of threads to be a direct multiple of
                       the image size, leading to suboptimal resource
@@ -311,20 +310,27 @@ function App() {
                   <div>
                     <p>
                       <span className="head">
-                        <span className="lime">2</span> Multiple Image Processing
+                        <span className="lime">2</span> Multiple Image
+                        Processing
                       </span>
                     </p>
                     <p>
-                      
-                    [5] is directly relevant to our project as it also focuses on the 
-                    parallelization of the SIFT algorithm using GPUs. Our project aims to address the computational 
-                    intensity of SIFT for high-resolution image frames in the video by leveraging the parallel processing capabilities of 
-                    GPUs, similar to their approach. Their two-stage parallelization design, focusing on both algorithm 
-                    design-generic strategies and architecture-specific optimizations, provides valuable insights into 
-                    optimizing GPU resources.  However, a limitation they faced was not utilizing the maximum available bandwidth. 
-                    In contrast, our improvement involves processing multiple images simultaneously, enabling scalability and better 
-                    utilization of available bandwidth, thus addressing the identified limitation and advancing the field further.
-
+                      [<span className="lime">5</span>] is directly relevant to
+                      our project as it also focuses on the parallelization of
+                      the SIFT algorithm using GPUs. Our project aims to address
+                      the computational intensity of SIFT for high-resolution
+                      image frames in the video by leveraging the parallel
+                      processing capabilities of GPUs, similar to their
+                      approach. Their two-stage parallelization design, focusing
+                      on both algorithm design-generic strategies and
+                      architecture-specific optimizations, provides valuable
+                      insights into optimizing GPU resources. However, a
+                      limitation they faced was not utilizing the maximum
+                      available bandwidth. In contrast, our improvement involves
+                      processing multiple images simultaneously, enabling
+                      scalability and better utilization of available bandwidth,
+                      thus addressing the identified limitation and advancing
+                      the field further.
                     </p>
                   </div>
                 </div>
@@ -336,15 +342,18 @@ function App() {
                       </span>
                     </p>
                     <p>
-                    The referenced work[1] by D. Lowe is pivotal in the field of computer vision, particularly in the extraction of invariant 
-                    features from images using the Scale-Invariant Feature Transform (SIFT) algorithm. This method is directly pertinent to 
-                    our project's objective of extracting robust features invariant to scale, rotation, and other distortions. Lowe's SIFT 
-                    features have demonstrated robustness against various challenges such as affine distortion, changes in viewpoint, noise 
-                    addition, and illumination variations, which aligns with our project's need for reliable feature extraction under similar 
-                    conditions.
-                      
-                    
-
+                      The referenced work [<span className="lime">1</span>] by
+                      D. Lowe is pivotal in the field of computer vision,
+                      particularly in the extraction of invariant features from
+                      images using the Scale-Invariant Feature Transform (SIFT)
+                      algorithm. This method is directly pertinent to our
+                      project's objective of extracting robust features
+                      invariant to scale, rotation, and other distortions.
+                      Lowe's SIFT features have demonstrated robustness against
+                      various challenges such as affine distortion, changes in
+                      viewpoint, noise addition, and illumination variations,
+                      which aligns with our project's need for reliable feature
+                      extraction under similar conditions.
                     </p>
                   </div>
                 </div>
@@ -357,8 +366,8 @@ function App() {
                     </p>
                     <p>
                       Our approach improves upon the SIFT algorithm
-                      implementation discussed in{' '}
-                      [<span className="lime">3</span>] by implementing all
+                      implementation discussed in [
+                      <span className="lime">3</span>] by implementing all
                       stages of the algorithm exclusively on the GPU,
                       eliminating the need for data transfer between the GPU and
                       CPU. This optimization minimizes overhead and fully
@@ -382,15 +391,16 @@ function App() {
                     </p>
                     <p>
                       In contrast to previous convolutional approaches discussed
-                      in [<span className="lime">4</span>], which did not leverage memory bandwidth for
-                      efficiency gains, our work focuses on optimizing memory
-                      access patterns, specifically through techniques like
-                      filter coalescing. This optimization strategy targets the
-                      enhanced shared memory bandwidth available in modern GPU
-                      architectures, leading to more efficient memory
-                      utilization. By improving memory access efficiency, our
-                      approach contributes significantly to overall performance
-                      enhancements in convolutional neural network computations,
+                      in [<span className="lime">4</span>], which did not
+                      leverage memory bandwidth for efficiency gains, our work
+                      focuses on optimizing memory access patterns, specifically
+                      through techniques like filter coalescing. This
+                      optimization strategy targets the enhanced shared memory
+                      bandwidth available in modern GPU architectures, leading
+                      to more efficient memory utilization. By improving memory
+                      access efficiency, our approach contributes significantly
+                      to overall performance enhancements in convolutional
+                      neural network computations,
                     </p>
                   </div>
                 </div>
@@ -412,15 +422,6 @@ function App() {
                       </span>
                     </p>
                     <p>
-                      {' '}
-                      {/* Epipolar geometry is fundamental to our project’s goal of
-                      generating stereoscopic views from single-camera videos.
-                      It involves understanding the geometric relationship
-                      between multiple views of the same scene, which is crucial
-                      for 3D reconstruction. Using epipolar geometry, we can
-                      determine corresponding points between frames, aiding in
-                      the estimation of depth and facilitating the creation of a
-                      stereoscopic effect. */}
                       We curated our own dataset for the project, focusing on
                       the Coda building. To maintain clarity and sharpness
                       across the frames of the video, we used a gimbal during
@@ -460,19 +461,6 @@ function App() {
                       multiplications per pixel, making the Gaussian filter an
                       efficient choice for image blurring while maintaining
                       quality.
-                      {/* Smith et al. utilize HDR cameras mounted on a mobile robot
-                      for stereo vision-based 3D reconstruction{' '}
-                      <span className="lime">[1]</span>. Their method captures
-                      textures and spatial features as 2D images and employs an
-                      algorithm for depth map visualization.
-                      <br />
-                      <br />
-                      OpenMVG is a library dedicated to Multiple-View Geometry
-                      and Structure-from-Motion tasks{' '}
-                      <span className="lime">[3]</span>. It facilitates
-                      identifying corresponding points between images and
-                      manipulating 3D geometry for various computer vision
-                      applications. */}
                     </p>
                     <SyntaxHighlighter
                       language="julia"
@@ -1200,20 +1188,22 @@ Time taken: 0.00175s for 5 layers and 3 octaves per image @ 128 images at a time
                       </span>
                     </p>
                     <p>
-                    In our project so far, we've made significant progress in optimizing video processing algorithms 
-                    for speed and efficiency. By strategically utilizing the memory hierarchy of GPUs and maximizing 
-                    memory coalescence,this approach ensures that even with the release 
-                    of new GPUs, our algorithms will continue to perform optimally by leveraging the L1 to L2 bus width 
-                    for maximum coalescence.
-
-
+                      In our project so far, we've made significant progress in
+                      optimizing video processing algorithms for speed and
+                      efficiency. By strategically utilizing the memory
+                      hierarchy of GPUs and maximizing memory coalescence,this
+                      approach ensures that even with the release of new GPUs,
+                      our algorithms will continue to perform optimally by
+                      leveraging the L1 to L2 bus width for maximum coalescence.
                     </p>
                     <p>
-                    Additionally, we've successfully implemented the SIFT algorithm up to the Difference of Gaussians (DoG) 
-                    stage with three octaves and five layers each. This implementation showcases our understanding of algebraic 
-                    methods such as Laplacian and Gaussian techniques, which are fundamental to many computer vision algorithms.
-                  
-                      While we couldn't complete the entire project as initially
+                      Additionally, we've successfully implemented the SIFT
+                      algorithm up to the Difference of Gaussians (DoG) stage
+                      with three octaves and five layers each. This
+                      implementation showcases our understanding of algebraic
+                      methods such as Laplacian and Gaussian techniques, which
+                      are fundamental to many computer vision algorithms. While
+                      we couldn't complete the entire project as initially
                       planned, there are several areas we identified for future
                       work
                     </p>
@@ -1311,53 +1301,17 @@ Time taken: 0.00175s for 5 layers and 3 octaves per image @ 128 images at a time
             </div>
             <div id="pf_con_con">
               <div id="pfs_container" className="short">
-                <p className="pfTitle">Contributions</p>
-                <div className="row">
-                  <div>
-                    <p>
-                      <span className="head">
-                        <span className="lime">1 </span>Kishore Shenoy
-                      </span>
-                    </p>
-                    <p>
-                      Contributed to the methodology of the project, and making
-                      of the website.
-                      <br /> <br />
-                      Future contributions include generating a GT specific
-                      dataset, generating the goldberg polyhedron model for
-                      vertices.
-                    </p>
-                  </div>
-                </div>
-                <div className="row">
-                  <div>
-                    <p>
-                      <span className="head">
-                        <span className="lime">2 </span> Rajeshwari Devaramani
-                      </span>
-                    </p>
-                    <p>
-                      Contributed towards the methodology of the project and
-                      implementation of the structure from motion algorithm.{' '}
-                      <br /> <br />
-                      Future contributions include vertex color generation and
-                      color polling based on angle during stereo image-sequence
-                      generation.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div id="pf_con_con">
-              <div id="pfs_container" className="short">
                 <p className="pfTitle">References</p>
                 <div className="row">
                   <div>
                     <p className="cite">
                       <span className="lime cite">1 </span> D. G. Lowe,
                       "Distinctive image features from scale-invariant
-                      keypoints," *International Journal of Computer Vision*,
-                      vol. 60, no. 2, pp. 91-110, 2004. [Online]. Available:{' '}
+                      keypoints,"{' '}
+                      <span className="semibold">
+                        International Journal of Computer Vision
+                      </span>
+                      , vol. 60, no. 2, pp. 91-110, 2004. [Online]. Available:{' '}
                       <a
                         href="https://www.cs.ubc.ca/~lowe/papers/ijcv04.pdf"
                         target="_blank"
@@ -1389,8 +1343,9 @@ Time taken: 0.00175s for 5 layers and 3 octaves per image @ 128 images at a time
                     <p className="cite">
                       <span className="lime cite">3 </span> M. N. S. M. Omar, M.
                       F. A. Rasid, and Z. M. Zain, "Parallelization and
-                      Optimization of SIFT on GPU Using CUDA," *ResearchGate*,
-                      2016. [Online]. Available:{' '}
+                      Optimization of SIFT on GPU Using CUDA,"{' '}
+                      <span className="semibold">ResearchGate</span>, 2016.
+                      [Online]. Available:{' '}
                       <a
                         href="https://www.researchgate.net/publication/269302930_Parallelization_and_Optimization_of_SIFT_on_GPU_Using_CUDA"
                         target="_blank"
@@ -1421,9 +1376,11 @@ Time taken: 0.00175s for 5 layers and 3 octaves per image @ 128 images at a time
                   <div>
                     <p className="cite">
                       <span className="lime cite">5 </span> S. S. Kumar and K.
-                      S. Babu, "Face Detection Using OpenCV," *Journal of Signal
-                      and Information Processing*, vol. 7, no. 2, pp. 103-112,
-                      2016. [Online]. Available:{' '}
+                      S. Babu, "Face Detection Using OpenCV,"{' '}
+                      <span className="semibold">
+                        Journal of Signal and Information Processing
+                      </span>
+                      , vol. 7, no. 2, pp. 103-112, 2016. [Online]. Available:{' '}
                       <a
                         href="https://www.scirp.org/journal/paperinformation?paperid=73133"
                         target="_blank"
