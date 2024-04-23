@@ -194,7 +194,7 @@ function App() {
                     type="image/svg+xml"
                     alt="spiral logo"
                   /> */}
-                  <img src={main_img} alt="CUDA+SIFT?" />
+                  <img src={main_img} alt="CUDA+SIFT?" className="main" />
                 </div>
 
                 <div className="flex ttb full-width center">
@@ -263,6 +263,7 @@ function App() {
                   <a
                     href="https://github.gatech.edu/kshenoy8/stereosquad/"
                     target="_blank"
+                    className="lime"
                   >
                     See the GitHub Repository here!
                   </a>
