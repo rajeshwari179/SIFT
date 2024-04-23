@@ -32,6 +32,7 @@ import Resample from './images/Resample.png';
 import main_img from './images/Head.png';
 import LP from './images/LP.png';
 import GaussianKernel from './images/GaussianKernel.png';
+import DoGKernel from './images/DoGKernel.png';
 
 function useInterval(callback, delay) {
   const savedCallback = useRef();
@@ -304,16 +305,17 @@ function App() {
                       </span>
                     </p>
                     <p>
-                      In our research, we address a key limitation identified in
-                      [2] where existing methods required the number of threads
-                      to be a direct multiple of the image size, leading to
-                      suboptimal resource utilization. Our approach introduces a
-                      more flexible thread-block configuration, enabling
-                      improved performance across diverse image sizes and
-                      resolutions. By deviating from rigid thread-image size
-                      alignments, our method enhances resource efficiency and
-                      scalability in parallel image processing tasks compared to
-                      prior techniques highlighted in [2].
+                      In our research, we address a key limitation identified in {' '}
+                      [<span className="lime">2</span>] where existing methods
+                      required the number of threads to be a direct multiple of
+                      the image size, leading to suboptimal resource
+                      utilization. Our approach introduces a more flexible
+                      thread-block configuration, enabling improved performance
+                      across diverse image sizes and resolutions. By deviating
+                      from rigid thread-image size alignments, our method
+                      enhances resource efficiency and scalability in parallel
+                      image processing tasks compared to prior techniques
+                      highlighted in [<span className="lime">2</span>].
                     </p>
                   </div>
                 </div>
@@ -327,16 +329,18 @@ function App() {
                     </p>
                     <p>
                       Our approach improves upon the SIFT algorithm
-                      implementation discussed in [3] by implementing all stages
-                      of the algorithm exclusively on the GPU, eliminating the
-                      need for data transfer between the GPU and CPU. This
-                      optimization minimizes overhead and fully harnesses GPU
-                      acceleration, leading to significant performance
-                      enhancements. Unlike the approach detailed in [3], our
-                      method maximizes efficiency by leveraging the GPU's
-                      processing power throughout the entire SIFT computation,
-                      resulting in improved speed and scalability for image
-                      feature extraction tasks.
+                      implementation discussed in{' '}
+                      [<span className="lime">3</span>] by implementing all
+                      stages of the algorithm exclusively on the GPU,
+                      eliminating the need for data transfer between the GPU and
+                      CPU. This optimization minimizes overhead and fully
+                      harnesses GPU acceleration, leading to significant
+                      performance enhancements. Unlike the approach detailed in{' '}
+                      [<span className="lime">3</span>], our method maximizes
+                      efficiency by leveraging the GPU's processing power
+                      throughout the entire SIFT computation, resulting in
+                      improved speed and scalability for image feature
+                      extraction tasks.
                     </p>
                   </div>
                 </div>
@@ -350,7 +354,7 @@ function App() {
                     </p>
                     <p>
                       In contrast to previous convolutional approaches discussed
-                      in [4], which did not leverage memory bandwidth for
+                      in [<span className="lime">4</span>], which did not leverage memory bandwidth for
                       efficiency gains, our work focuses on optimizing memory
                       access patterns, specifically through techniques like
                       filter coalescing. This optimization strategy targets the
@@ -1006,6 +1010,11 @@ apron = ceil(Int, sigma * sqrt(-2 * log(epsilon)))`}
                         <span className="lime"> </span> Gaussian Filtering
                       </span>
                     </p>
+                    <img
+                      src={GaussianKernel}
+                      alt="Output of Gaussian Kernels"
+                      className="short"
+                    />
                     <p>
                       By adjusting the number of octaves and visualizing the
                       impact of octave size, we optimized the SIFT algorithm's
@@ -1016,11 +1025,6 @@ apron = ceil(Int, sigma * sqrt(-2 * log(epsilon)))`}
                       for analyzing 64 images concurrently, with each image
                       containing 5 layers and 3 octaves.
                     </p>
-                    <img
-                      src={GaussianKernel}
-                      alt="Output of Gaussian Kernels"
-                      className='short'
-                    />
                   </div>
                 </div>
                 <div className="row">
@@ -1045,7 +1049,7 @@ apron = ceil(Int, sigma * sqrt(-2 * log(epsilon)))`}
                       we expedite the Gaussian filtering process, crucial for
                       pre-processing tasks in image analysis.
                     </p>
-                    
+
                     <SyntaxHighlighter
                       language="shell"
                       style={tomorrowNightBright}
@@ -1088,6 +1092,39 @@ Here we go!
 Warmup done!
 Time taken: 0.00175s for 5 layers and 3 octaves per image @ 128 images at a time`}
                     </SyntaxHighlighter>
+                    <p>
+                      The above code snippet demonstrates the processing time of
+                      the Gaussian filter for different numbers of images
+                      processed concurrently. As the number of images processed
+                      in parallel increases, the processing time per image
+                      decreases, indicating the efficiency of our
+                      GPU-accelerated implementation. This kinda scaling gives
+                      us the <i>tingles!</i>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="row">
+                  <div>
+                    <p>
+                      <span className="head">
+                        <span className="lime"> </span> Difference of Gaussian
+                      </span>
+                    </p>
+                    <p>
+                      Let's look at how the DoG kernels look outputs look like.
+                      As we go up in octaves, the smaller features are lost, but
+                      the larger features are retained. This is because the
+                      larger features are more stable across scales, while the
+                      smaller features are more sensitive to scale changes. This
+                      is a key feature of the DoG kernel, which helps in
+                      identifying stable keypoints across different scales.
+                    </p>
+                    <img
+                      src={DoGKernel}
+                      alt="Output of Gaussian Kernels"
+                      className="short"
+                    />
                   </div>
                 </div>
               </div>
