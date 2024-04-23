@@ -5,6 +5,9 @@ __pycache__/
 
 assets/videos/*
 assets/images/*
+*.png
+
+# !assets/videos/DJI_20240329_154936_17_null_beauty.mp4
 
 *.pdf
 content/*
