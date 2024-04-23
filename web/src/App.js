@@ -279,19 +279,7 @@ function App() {
                         {/* <span className="lime">1 </span>Structure from Motion */}
                       </span>
                     </p>
-                    <p>
-                      In our experiments, we generated a dataset comprising 1980
-                      frames extracted from a 66-second video. To efficiently
-                      apply convolution with Gaussian blurring in both vertical
-                      and horizontal directions, we processed 128 images
-                      simultaneously, arranged in a row. This approach was
-                      designed to harness the high DRAM availability of modern
-                      GPUs. Specifically, we utilized an NVIDIA H100 80GB HBM3
-                      GPU from the Georgia Tech's PACE cluster. With CUDA
-                      Version 12.2 and Julia 1.9.2, we leveraged the parallel
-                      processing capabilities of our GPU to achieve optimal
-                      performance.
-                    </p>
+                   
                   </div>
                 </div>
 
@@ -317,12 +305,52 @@ function App() {
                     </p>
                   </div>
                 </div>
-
                 <div className="row">
                   <div>
                     <p>
                       <span className="head">
-                        <span className="lime">2</span> GPU-Only Processing
+                        <span className="lime">2</span> Multiple Image Processing
+                      </span>
+                    </p>
+                    <p>
+                      
+                    [5] is directly relevant to our project as it also focuses on the 
+                    parallelization of the SIFT algorithm using GPUs. Our project aims to address the computational 
+                    intensity of SIFT for high-resolution image frames in the video by leveraging the parallel processing capabilities of 
+                    GPUs, similar to their approach. Their two-stage parallelization design, focusing on both algorithm 
+                    design-generic strategies and architecture-specific optimizations, provides valuable insights into 
+                    optimizing GPU resources.  However, a limitation they faced was not utilizing the maximum available bandwidth. 
+                    In contrast, our improvement involves processing multiple images simultaneously, enabling scalability and better 
+                    utilization of available bandwidth, thus addressing the identified limitation and advancing the field further.
+
+                    </p>
+                  </div>
+                </div>
+                <div className="row">
+                  <div>
+                    <p>
+                      <span className="head">
+                        <span className="lime">3</span> Octaves and Layers
+                      </span>
+                    </p>
+                    <p>
+                    The referenced work[1] by D. Lowe is pivotal in the field of computer vision, particularly in the extraction of invariant 
+                    features from images using the Scale-Invariant Feature Transform (SIFT) algorithm. This method is directly pertinent to 
+                    our project's objective of extracting robust features invariant to scale, rotation, and other distortions. Lowe's SIFT 
+                    features have demonstrated robustness against various challenges such as affine distortion, changes in viewpoint, noise 
+                    addition, and illumination variations, which aligns with our project's need for reliable feature extraction under similar 
+                    conditions.
+                      
+                    
+
+                    </p>
+                  </div>
+                </div>
+                <div className="row">
+                  <div>
+                    <p>
+                      <span className="head">
+                        <span className="lime">4</span> GPU-Only Processing
                       </span>
                     </p>
                     <p>
@@ -345,7 +373,7 @@ function App() {
                   <div>
                     <p>
                       <span className="head">
-                        <span className="lime">3 </span>Optimized Memory Access
+                        <span className="lime">5</span> Optimized Memory Access
                       </span>
                     </p>
                     <p>
@@ -1126,7 +1154,7 @@ Time taken: 0.00175s for 5 layers and 3 octaves per image @ 128 images at a time
                     </p>
                   </div>
                 </div>
-                <p className="pfTitle">Future Work</p>
+                <p className="pfTitle">Discussion and Future Work</p>
                 <div className="row">
                   <div>
                     <p>
@@ -1135,9 +1163,22 @@ Time taken: 0.00175s for 5 layers and 3 octaves per image @ 128 images at a time
                       </span>
                     </p>
                     <p>
+                    In our project so far, we've made significant progress in optimizing video processing algorithms 
+                    for speed and efficiency. By strategically utilizing the memory hierarchy of GPUs and maximizing 
+                    memory coalescence,this approach ensures that even with the release 
+                    of new GPUs, our algorithms will continue to perform optimally by leveraging the L1 to L2 bus width 
+                    for maximum coalescence.
+
+
+                    </p>
+                    <p>
+                    Additionally, we've successfully implemented the SIFT algorithm up to the Difference of Gaussians (DoG) 
+                    stage with three octaves and five layers each. This implementation showcases our understanding of algebraic 
+                    methods such as Laplacian and Gaussian techniques, which are fundamental to many computer vision algorithms.
+                  
                       While we couldn't complete the entire project as initially
                       planned, there are several areas we identified for future
-                      work:
+                      work
                     </p>
                     <p>
                       <span className="head">
