@@ -1,0 +1,37 @@
+{
+  "files": {
+    "main.css": "/SIFT/static/css/main.8301ce23.css",
+    "main.js": "/SIFT/static/js/main.66dff7f4.js",
+    "static/js/787.395fa40f.chunk.js": "/SIFT/static/js/787.395fa40f.chunk.js",
+    "static/media/main img.svg": "/SIFT/static/media/main img.51debd9f7cfe103943e6ed622481f6cd.svg",
+    "static/media/Head.png": "/SIFT/static/media/Head.c22ac6e04eac8c1004ef.png",
+    "static/media/SF-Pro-Display-Semibold.otf": "/SIFT/static/media/SF-Pro-Display-Semibold.69c013a9ccdf71f8fb02.otf",
+    "static/media/SF-Pro-Display-Heavy.otf": "/SIFT/static/media/SF-Pro-Display-Heavy.416830bd90729251123c.otf",
+    "static/media/SF-Pro-Display-Medium.otf": "/SIFT/static/media/SF-Pro-Display-Medium.ac6ee805f3d958d49a6b.otf",
+    "static/media/SF-Pro-Display-Bold.otf": "/SIFT/static/media/SF-Pro-Display-Bold.fc68e8299c85a379d7b1.otf",
+    "static/media/SF-Pro-Display-Regular.otf": "/SIFT/static/media/SF-Pro-Display-Regular.143d56f5a3a2c0dee78c.otf",
+    "static/media/GaussianKernel.png": "/SIFT/static/media/GaussianKernel.268a73dfa17ac47f8479.png",
+    "static/media/DoGKernel.png": "/SIFT/static/media/DoGKernel.d9e7e51a780572ef9d28.png",
+    "static/media/dataset.jpeg": "/SIFT/static/media/dataset.c6560278aa1e7e90a461.jpeg",
+    "static/media/DoG.png": "/SIFT/static/media/DoG.42f110d2009c0e998d62.png",
+    "static/media/LP.png": "/SIFT/static/media/LP.ccfa5cf8a166ba8b31cf.png",
+    "static/media/Resample.png": "/SIFT/static/media/Resample.5bb3847c70f1e3fd833c.png",
+    "static/media/Gaussian.png": "/SIFT/static/media/Gaussian.40b2a4c9872bcbce3abb.png",
+    "static/media/gaussian.jpeg": "/SIFT/static/media/gaussian.1a253d5b441992615770.jpeg",
+    "static/media/madewithlove.svg": "/SIFT/static/media/madewithlove.0be4ca50356b903b6b1d6495d269fbef.svg",
+    "static/media/Back Shapes_bg.svg": "/SIFT/static/media/Back Shapes_bg.c8f77b4f87ae234107b22b27c793011c.svg",
+    "index.html": "/SIFT/index.html",
+    "static/media/logo.svg": "/SIFT/static/media/logo.cd3ecdfff2da42f25a875fc49e8d164a.svg",
+    "static/media/Back Shapes_bg_2.svg": "/SIFT/static/media/Back Shapes_bg_2.a3642e0fa751e11c418c93c54de03be5.svg",
+    "static/media/pending.svg": "/SIFT/static/media/pending.def85b45df97c02bbab74046fd5f515b.svg",
+    "static/media/rightarrow.svg": "/SIFT/static/media/rightarrow.1807afbdaed91c2ba104d3fd23c1d077.svg",
+    "static/media/done.svg": "/SIFT/static/media/done.ceae805c366dd3cb11c3d817b8dac19e.svg",
+    "main.8301ce23.css.map": "/SIFT/static/css/main.8301ce23.css.map",
+    "main.66dff7f4.js.map": "/SIFT/static/js/main.66dff7f4.js.map",
+    "787.395fa40f.chunk.js.map": "/SIFT/static/js/787.395fa40f.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.8301ce23.css",
+    "static/js/main.66dff7f4.js"
+  ]
+}
